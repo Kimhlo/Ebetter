@@ -12,16 +12,25 @@
 #include <QThread>
 #include <QDateTime>
 
+/*****************************************
+ * 全局变量的定义，包括hue灯的结构体和底层灯光控制
+ * 系统发送的开关状态接受的数据recData，以及当前
+ * 的模式mode
+******************************************/
 struct hueData
 {
     float color[2];
     int bri;
+    int ct;
 };
 
 extern hueData lightData[12];
 extern QByteArray recData;
 extern int mode;
 
+/*****************************************
+ * 时间检查线程的定义
+******************************************/
 class CheckThread:public QThread
 {
     Q_OBJECT
@@ -34,15 +43,20 @@ public:
     bool alarmStatus=false;
 private:
     int colorChangeTime[10]={22,23,0,1,2,3,4,5,6,7};
-
+    int ctChangeTime[8]={23,00,1,2,3,4,5,6};
 protected:
     void run();
 signals:
     void hueInfoChanged();
+    void hueCtChaged();
     void onAlarm();
     void onCurtainChanged(int id,int i);
+
 };
 
+/*****************************************
+ * 场景类的定义
+******************************************/
 class Scene : public QObject
 {
     Q_OBJECT
@@ -83,10 +97,8 @@ public slots:
     void updateScene();
     void openAlarm();
     void operateCurtain(int id,int i);
-
+    void updateCt();
 };
-
-
 
 #endif // SCENE_H
 

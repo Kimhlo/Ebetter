@@ -6,8 +6,8 @@
 #include <wiringSerial.h>
 
 
-int curtain1=0;
-int curtain2=0;
+int lace[5]=0;
+int curtain[5]=0;
 
 CurtainNew::CurtainNew(QObject *parent) : QObject(parent)
 {
@@ -33,11 +33,10 @@ CurtainNew::CurtainNew(QObject *parent) : QObject(parent)
     sendData[0]=0x7E;
 }
 
-/*************************************
+/*****************************************************************
 * id编号：1.茶室 2.大厅 3.老人房 4.次卧 5.主卧
-* 状态号：1.开纱帘 2.关纱帘 3.停止纱帘
-*        4.开窗帘 5.关窗帘 6.停止窗帘
-*************************************/
+* 状态号：1.开纱帘 2.关纱帘 3.停止纱帘 4.开窗帘 5.关窗帘 6.停止窗帘
+******************************************************************/
 
 void CurtainNew::setStatus(const int &id,const int &status)
 {
@@ -128,6 +127,9 @@ void CurtainNew::open(const int &id,const int &curtain)
     }
 }
 
+//close the realtive curtain
+//curtain =1 is the lace curtain
+//curtain =2 is the curtain
 void CurtainNew::close(const int &id,const int &curtain)
 {
     if(curtain==1){
@@ -139,6 +141,10 @@ void CurtainNew::close(const int &id,const int &curtain)
     }
 }
 
+/*****************************************************************************
+* slot function is used to handle the timer out signal,
+* when the realtive timer is time out it will run and stop the timer run again
+******************************************************************************/
 void CurtainNew::stopOpenHalf1()
 {
     setStatus(1,6);

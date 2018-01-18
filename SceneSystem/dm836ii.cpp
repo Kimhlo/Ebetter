@@ -320,7 +320,6 @@ int DM836II::nowRadioStatus()
             recData[j]=serialGetchar(fd_usb0);
 //            qDebug()<<"Received"<<j<<"=" <<int(recData[j]);
             if(j==k0-1) qDebug()<<"get now radio status";
-
         }
 
         for(int j=0;j<k0;j++){
@@ -334,7 +333,6 @@ int DM836II::nowRadioStatus()
         }
     }
     return k1;
-
 }
 
 void DM836II::playNow(const int &source)

@@ -1,0 +1,13 @@
+INPUT(
+./release\main.o
+./release\mainwindow.o
+./release\philipshue.o
+./release\scene.o
+./release\curtainnew.o
+./release\dm836ii.o
+./release\moc_mainwindow.o
+./release\moc_philipshue.o
+./release\moc_scene.o
+./release\moc_curtainnew.o
+./release\moc_dm836ii.o
+);

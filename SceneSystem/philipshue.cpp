@@ -80,6 +80,17 @@ void PhilipsHue::lightsDraw(const int &number,const bool &draw)
         }
     }
 }
+
+void PhilipsHue::lightsCt(const int &number, const int &ct)
+{
+    QUrl url(createUrl("lights",number,"state"));
+    QJsonObject objecet;
+    QJsonDocument doc;
+    objecet.insert("ct",ct);
+    doc.setObject(objecet);
+    jsonData=doc.toJson();
+    sendOrder(url,"put",jsonData);
+}
 /*****************************************************************/
 /*********************************************
 *this function is used to operate the light
@@ -159,6 +170,18 @@ void PhilipsHue::groupDraw(const int &id, const bool &draw)
             reply=manager->put(request,jsonData);
         }
     }
+}
+
+void PhilipsHue::groupCt(const int &id, const int &ct)
+{
+    QJsonObject objecet;
+    QJsonDocument doc;
+    QByteArray jsonData;
+    request.setUrl(createUrl("groups",id,"action"));
+    objecet.insert("ct",ct);
+    doc.setObject(objecet);
+    jsonData=doc.toJson();
+    reply=manager->put(request,jsonData);
 }
 
 void PhilipsHue::getColorXY()
