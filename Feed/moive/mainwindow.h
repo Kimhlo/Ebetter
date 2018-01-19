@@ -26,7 +26,6 @@ public:
     ~MainWindow();
     QTimer *showTime;//获取图像的定时器
     QImage image;//图像
-    QImage *scaledImage;//缩放后的图像
 
 private:
     Ui::MainWindow *ui;
