@@ -92,6 +92,7 @@ void PhilipsHue::lightsCt(const int &number, const int &ct)
     sendOrder(url,"put",jsonData);
 }
 /*****************************************************************/
+
 /*********************************************
 *this function is used to operate the light
 *base on the light number
@@ -200,6 +201,7 @@ void PhilipsHue::getColorXY()
 }
 
 /*****************************************************************/
+
 /*********************************************
 *this function is used to create the url
 **********************************************/
@@ -275,6 +277,7 @@ QUrl PhilipsHue::createUrl(const QString &str1, const int &number, const QString
 }
 
 /*****************************************************************/
+
 /*********************************************
 *this function is send the data to the bridge
 **********************************************/
