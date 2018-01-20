@@ -24,6 +24,27 @@ RecThread::~RecThread()
 
 }
 
+bool RecThread::checkIsNew(char data[])
+{
+    int len=sizeof(data)/sizeof(data[0]);
+    int judgeLen=7;
+    int samePos=0;
+
+    for(int i=0;i<len-judgeLen;i++){
+        for(int j=0;j<judgeLen;j++){//判断前六位是否有一致的
+            if(data[i+j]!=pre_rfid[j]&&len>=i+27){
+                samePos+=1;
+            }
+        }
+        //取后面judgeLen的长度来判断是否一致
+        if(samePos=judgeLen){
+            return false;
+        }
+    }
+    return true;
+
+}
+
 void RecThread::run()
 {
     int i=0;
@@ -41,24 +62,34 @@ void RecThread::run()
     unsigned char tx_weight[8];
     unsigned char rx_weight[100];
 
+    //初始化温度和体重为0
+    for(int m=0;m<100;m++){
+        rx_temp[m]=0;
+        rx_weight[m]=0;
+    }
+
     char buf[BUFSIZE];
     char tempBuf[5];
 
+    //检查是否为RFID
+    isNew=true;
+    //初始化当前curr_rfid
+    for(int m=0;m<28;m++){
+        curr_rfid[m]=0;
+    }
+
     int fd,fd_usb0,fd_usb1,fd_usb2;
-    if(wiringPiSetup() < 0);
-      qDebug()<<"ini  error\n";
-  //  if((fd = serialOpen("/dev/ttyAMA0",115200)) < 0)
-   //     qDebug()<<"open ttyAMA0 error\n";
+    if(wiringPiSetup() < 0)
+         qDebug()<<"ini  error\n";
 
+    if((fd_usb0 = serialOpen("/dev/ttyUSB2",9600)) < 0)
+         qDebug()<<"open usb0 error\n";
 
-     if((fd_usb0 = serialOpen("/dev/ttyUSB0",9600)) < 0)
-        qDebug()<<"open usb0 error\n";
+    if((fd_usb1 = serialOpen("/dev/ttyUSB0",9600)) < 0)
+         qDebug()<<"open usb1 error\n";
 
-      if((fd_usb1 = serialOpen("/dev/ttyUSB1",9600)) < 0)
-        qDebug()<<"open usb1 error\n";
-
-      if((fd_usb2 = serialOpen("/dev/ttyUSB2",9600)) < 0)
-        qDebug()<<"open usb2 error\n";
+    if((fd_usb2 = serialOpen("/dev/ttyUSB3",9600)) < 0)
+         qDebug()<<"open usb2 error\n";
 
     //serialPrintf(fd,"Hello World!!!");
     tx_weight[0]=0x01;
@@ -76,62 +107,53 @@ void RecThread::run()
     tx_temp[3] = 0x0A;  //换行
 
 
-    for(i=0;i<27;i++)
+    for(i=0;i<28;i++)
     {
         pre_rfid[i]=1;
     }
 
+    //init the relay
     pinMode(IN1, OUTPUT);
     pinMode(IN2, OUTPUT);
     pinMode(IN3, OUTPUT);
     pinMode(IN4, OUTPUT);
 
-   //     digitalWrite(IN2, HIGH);
+    //close the relay
+    digitalWrite(IN1, HIGH);
+    digitalWrite(IN2, HIGH);
+    digitalWrite(IN3, HIGH);
+    digitalWrite(IN4, HIGH);
 
-
-
-//       digitalWrite(IN1, LOW);
-//       digitalWrite(IN2, LOW);
-//       digitalWrite(IN3, LOW);
-//       digitalWrite(IN4, LOW);
-//       QThread::msleep(4000);
-
-        digitalWrite(IN1, HIGH);
-        digitalWrite(IN2, HIGH);
-        digitalWrite(IN3, HIGH);
-        digitalWrite(IN4, HIGH);
     //DS18B20
     int fd_18b20;
     fd_18b20 = open("/sys/bus/w1/devices/28-0316a0381fff/w1_slave", O_RDONLY); //以只读方式打开ds18b20设备文件
-    if(-1 == fd_18b20){              //打开设备文件出错
+    if(-1 == fd_18b20){
+        //打开设备文件出错
         qDebug()<<"open DS18B20  device file error";  //打印出错信息（原因）
     }
     //DS18B20
-
-    pinMode(7, INPUT);
+    pinMode(7, INPUT);//
 
     while(1)
     {
-        inLevel=digitalRead(0);
+        inLevel=digitalRead(0);//食槽是否还有食物
+        qDebug()<<"inLevel="<<inLevel;
 
-       qDebug()<<"inLevel="<<inLevel;
-
+        //usb2用于称重
         for(i=0;i<8;i++)
         {
             serialPutchar(fd_usb2,tx_weight[i]);
         }
 
-       //usb0 tx start  weight
+        //usb1用于红外检测
         for(i=0;i<4;i++)
         {
             serialPutchar(fd_usb1,tx_temp[i]);
         }
-       //usb0 tx end
 
         //DS18B20
         float temp;
         int i, j;
-
 
         if(read(fd_18b20, buf, BUFSIZE)<0) //将设备文件中的内容读入buf中
         {
@@ -146,117 +168,97 @@ void RecThread::run()
             }
         }
 
-     //   qDebug()<<tempBuf[0]<<tempBuf[1]<<tempBuf[2]<<tempBuf[3]<<tempBuf[4];
-       // temp = (float)atoi(tempBuf) / 1000;  //将字符串转换为浮点型温度数据
 
-       // printf("%.3f C\n",temp);             //打印出温度值
-        //DS18B20
-
+//        qDebug()<<tempBuf[0]<<tempBuf[1]<<tempBuf[2]<<tempBuf[3]<<tempBuf[4];
+//        temp = (float)atoi(tempBuf) / 1000;  //将字符串转换为浮点型温度数据
+//        printf("%.3f C\n",temp);             //打印出温度值
         QThread::msleep(2000);
 
-        //usb0 rx start
-        k0=serialDataAvail (fd_usb0);  //rfid
-        qDebug()<<"k0="<<k0;
+        //RFID收到数据
+        k0=serialDataAvail (fd_usb0);
+//        qDebug()<<"RFID="<<k0;
+        //有客官来了，翠花上酸菜
        if(k0>26)
         {
+           qDebug()<<"有客官来了，翠花上酸菜";
             for(i=0;i<k0;i++)
             {
                rx_rfid[i]=serialGetchar(fd_usb0);
-//               qDebug()<< rx_rfid[i];
             }
-
+            //更新当前的RFID数据
             for(i=0;i<27;i++)
             {
                 curr_rfid[i]=rx_rfid[i];
             }
+            //判断是否为新的ID，判断前几位是否有连续一致
+            isNew=checkIsNew(pre_rfid);
 
-            for(i=0;i<27;i++)
-            {
-               if(pre_rfid[i]!=curr_rfid[i])
-                   kk=kk+1;
-            }
-           qDebug()<<"kk="<<kk;
         }
-        //usb0 rx end
-        if(kk==27 && k0>26)
+
+        //给新的猪哥哥做个全身检查
+        if(isNew)
         {
-           // kk=0;
+            qDebug()<<"新的风暴已经来临";
             for(i=0;i<27;i++)
             {
                 pre_rfid[i]=curr_rfid[i];
                 recData[i]=curr_rfid[i];
             }
-           //======================
-           emit UpdateSignal(0,0,1);  //play music
-           Push_w();
-          //======================
 
-        //usb1 rx start   232
-        k1=serialDataAvail (fd_usb1);  //hongwai
-        qDebug()<<"k1="<<k1;
-        //if(k>8)
-        //{
-        for(i=0;i<k1;i++)
-        {
-            rx_temp[i]=serialGetchar(fd_usb1);
-          // qDebug()<< rx_temp[i];
-        }
-        for(i=0;i<4;i++)
-        {
-            recData[i+27]=rx_temp[i+3];
-        }
-       // }
-        //usb1 rx end
+            //why not come some music!!!
+            emit UpdateSignal(0,0,1);
 
-        //usb2 rx start
-        k2=serialDataAvail (fd_usb2); //weight
-      //  qDebug()<<"k2="<<k2;
-        //if(k>8)
-        //{
-        for(i=0;i<k2;i++)
-        {
-            rx_weight[i]=serialGetchar(fd_usb2);
-          //  qDebug()<< rx_weight[i];
-        }
+            //开始给猪哥哥上菜
+            getFood();
 
-        for(i=0;i<4;i++)
-        {
-            recData[i+31]=rx_temp[i+3];
-        }
-       // }
-        //usb2 rx end
+            //读取红外温度数据
+            k1=serialDataAvail (fd_usb1);
+            qDebug()<<"Temper="<<k1;
+            for(i=0;i<k1;i++)
+            {
+                rx_temp[i]=serialGetchar(fd_usb1);
+                qDebug()<<"temper"<<i<<"="<< rx_temp[i];
+            }
+            //把猪哥哥的温柔告诉其他人
+            for(i=0;i<4;i++)
+            {
+                recData[i+27]=rx_temp[i+3];
+            }
 
-        recData[36]=inLevel;
+            //读取体重秤的数据
+            k2=serialDataAvail (fd_usb2);
+            qDebug()<<"Weight="<<k2;
 
-        emit UpdateSignal(0,0,1); //显示收到的数据
-     }
+            for(i=0;i<k2;i++)
+            {
+                rx_weight[i]=serialGetchar(fd_usb2);
+                qDebug()<<"weight"<<i<<"="<< rx_weight[i];
+            }
+            //你的重量我知道了
+            for(i=0;i<4;i++)
+            {
+                recData[i+31]=rx_weight[i+3];
+            }
 
-        qDebug()<<"inLevel="<<inLevel<<"kk="  <<kk;
-       if(inLevel==1)
-       {
-         recData[36]=1;
-         if(kk==27)
-         {
-            emit UpdateSignal(0,0,1); //显示收到的数据
-             kk=0;
-         }
+            //当前的碗里給猪哥哥饭了么？
+            recData[36]=inLevel;
 
-       }
-       else
+            //你的数据我要告诉所有人
+            emit UpdateSignal(0,0,1);
+
+        }//读取新猪的数据结束
+
+       if(inLevel==1){
+         recData[36]=1;//吃完
+         qDebug()<<"劳资整完了饭";
+         emit UpdateSignal(0,0,1); //显示收到的数据
+       }else{
          recData[36]=0;
+         qDebug()<<"前个猪不行啊，没吃完";
+       }
 
-
-        //JiDianQi   start
-      //  digitalWrite(IN1, HIGH);
-      //  digitalWrite(IN1, HIGH);
-
-     // QThread::msleep(100);
     }
-    serialClose(fd_usb0);
-    serialClose(fd_usb1);
-    serialClose(fd_usb2);
 
-    close(fd_18b20);                           //关闭文件
 }
 
 void RecThread::ResetSlot()
@@ -265,20 +267,21 @@ void RecThread::ResetSlot()
 }
 
 
-void RecThread::Push_w()
+void RecThread::getFood()
 {
-    digitalWrite(IN3, HIGH); //down close
+    digitalWrite(IN3, HIGH); //下面的继电器关
     QThread::msleep(4000);
 
-    digitalWrite(IN1, LOW);  //up  open
+    digitalWrite(IN1, LOW);  //上面的继电器开
     QThread::msleep(4000);
 
-    digitalWrite(IN1 ,HIGH); //up close
+    digitalWrite(IN1 ,HIGH); //上面的继电器关
     QThread::msleep(4000);
 
-    digitalWrite(IN3, LOW);  //down open
+    digitalWrite(IN3, LOW);  //下面的继电器开
     QThread::msleep(3000);
 
+    //继电器关
     digitalWrite(IN1,HIGH);
     digitalWrite(IN3,HIGH);
 }

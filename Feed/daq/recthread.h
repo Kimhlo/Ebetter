@@ -25,7 +25,9 @@ class RecThread:public QThread
 private:
    char curr_rfid[28];
    char pre_rfid[28];
+   bool isNew;
 
+   bool checkIsNew(char data[]);
 protected:
     void run();
 
@@ -37,7 +39,7 @@ signals:
 
 public slots:
     void ResetSlot();
-    void Push_w();
+    void getFood();
 };
 
 #endif // RECTHREAD_H

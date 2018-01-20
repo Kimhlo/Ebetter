@@ -62,13 +62,9 @@ void MainWindow::RecvTCP()
 {
     int len=0;
     QByteArray datagram_1;
-    len=tcpSocket->bytesAvailable();
-    datagram_1.resize(len);
-    //
+    len=tcpSocket->bytesAvailable(); 
     datagram_1 = tcpSocket->readAll();
-
     tcpSocket->write(datagram_1,len);
-
     ui->label->setText(datagram_1.toHex());
   //  qDebug()<<datagram_1;
 
