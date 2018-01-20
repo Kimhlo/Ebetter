@@ -79,7 +79,7 @@ void MainWindow::getReply(QNetworkReply *reply)
 
 void MainWindow::updatePic()
 {
-    qDebug()<<"updata pic";
+//    qDebug()<<"updata pic";
     request.setUrl(QUrl(PU));//设置访问的网址
     manager->get(request);//用get方法获取图像
 }
