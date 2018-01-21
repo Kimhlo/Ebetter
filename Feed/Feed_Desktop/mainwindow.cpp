@@ -86,22 +86,24 @@ void MainWindow::updatePic()
 void MainWindow::udp_rec_5000()
 {
     QByteArray arr;
+    quint16 port;
     while(udpSocket_5000->hasPendingDatagrams())
     {
         arr.resize(udpSocket_5000->pendingDatagramSize());
-        udpSocket_5000->readDatagram(arr.data(), arr.size());
+        udpSocket_5000->readDatagram(arr.data(), arr.size(),&IP_sensor,&port);
+//        IP_sensor=udpSocket_5000->localAddress();
     }
-    //获取数据包地址
-    IP_sensor=udpSocket_5000->peerAddress();
+    QString strIP= IP_sensor.toString();
+    qDebug()<<"IP="<<strIP;
 
+    //获取数据包地址
     this->ui->label_21->setText(arr.toHex());
 
-    QString strIP=IP_sensor.toString().mid(7,17);
-    if(strIP=="192.168.1.103")  //sensor_1
+
+    //食槽1
+    if(strIP=="::ffff:192.168.31.124")
     {
-        //=====================
-        // qDebug()<<arr.toHex();
-        //====================
+        qDebug()<<"dadad";
         char ch_1[2];
         char ch_2[2];
         unsigned short val;
@@ -132,18 +134,18 @@ void MainWindow::udp_rec_5000()
         // ui->label_22->setText(QString::number(arr[43]));
     }
     //============================================
-    if(strIP=="192.168.1.104")  //sensor_2
+    if(strIP=="::ffff:192.168.1.104")  //sensor_2
     {
         this->ui->label_23->setText(arr.toHex());
         ui->label_rfid_2->setText(this->ui->label_23->text().mid(0,54));
     }
 
-    if(strIP=="192.168.1.107")  //windows_1
+    if(strIP=="::ffff:192.168.1.107")  //windows_1
     {
        QString strIP=IP_sensor.toString().mid(7,17);
        this->ui->label_21->setText(arr.toHex());
     }
-    if(strIP=="192.168.1.109")  //windows_2
+    if(strIP=="::ffff:192.168.1.109")  //windows_2
     {
        QString strIP=IP_sensor.toString().mid(7,17);
        this->ui->label_21->setText(arr.toHex());
