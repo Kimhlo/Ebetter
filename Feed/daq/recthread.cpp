@@ -26,24 +26,21 @@ RecThread::~RecThread()
 
 bool RecThread::checkIsNew(char data[], int &k0)
 {
-//    int len=sizeof(data)/sizeof(data[0]);
     int judgeLen=17;
     int samePos=0;
-//    qDebug()<<"incheck"<<sizeof(data);
 
     for(int i=0;i<k0-judgeLen;i++){
-        for(int j=0;j<judgeLen;j++){//判断前七位是否有一致的
+        for(int j=0;j<judgeLen;j++){//判断前17位是否有一致的
             if(data[i+j]==pre_rfid[j+10]){
                 samePos+=1;
             }
-            //取后面judgeLen的长度来判断是否一致
+            //读取相同的数据个数是否与判断的长度一致，允许有两位突变
             if(samePos>=judgeLen-2){
                 qDebug()<<"The same="<<samePos;
                 return false;
             }
         }
         samePos=0;
-
     }
     return true;
 
@@ -172,8 +169,6 @@ void RecThread::run()
                 }
             }
         }
-
-
 //        qDebug()<<tempBuf[0]<<tempBuf[1]<<tempBuf[2]<<tempBuf[3]<<tempBuf[4];
 //        temp = (float)atoi(tempBuf) / 1000;  //将字符串转换为浮点型温度数据
 //        printf("%.3f C\n",temp);             //打印出温度值
@@ -208,15 +203,12 @@ void RecThread::run()
             for(i=0;i<27;i++)
             {
                 pre_rfid[i]=curr_rfid[i];
-                qDebug()<<"per"<<int(pre_rfid[i]);
+//                qDebug()<<"per"<<int(pre_rfid[i]);
                 recData[i]=curr_rfid[i];
             }
 
             //why not come some music!!!
             emit UpdateSignal(0,0,1);
-
-            //开始给猪哥哥上菜
-            getFood();
 
             //读取红外温度数据
             k1=serialDataAvail (fd_usb1);
@@ -241,11 +233,14 @@ void RecThread::run()
                 rx_weight[i]=serialGetchar(fd_usb2);
                 qDebug()<<"weight"<<i<<"="<< rx_weight[i];
             }
-            //你的重量我知道了
+            //将重量数据写入相应的
             for(i=0;i<4;i++)
             {
                 recData[i+31]=rx_weight[i+3];
             }
+
+            //开始给猪哥哥上菜
+            getFood();
 
             //当前的碗里給猪哥哥饭了么？
             recData[36]=inLevel;
@@ -261,11 +256,10 @@ void RecThread::run()
          emit UpdateSignal(0,0,1); //显示收到的数据
        }else{
          recData[36]=0;
-         qDebug()<<"前个猪不行啊，没吃完";
+         qDebug()<<"人家还没吃完";
        }
 
     }
-
 }
 
 void RecThread::ResetSlot()
@@ -288,7 +282,7 @@ void RecThread::getFood()
     digitalWrite(IN3, LOW);  //下面的继电器开
     QThread::msleep(3000);
 
-    //继电器关
+    //气缸关闭
     digitalWrite(IN1,HIGH);
     digitalWrite(IN3,HIGH);
 }

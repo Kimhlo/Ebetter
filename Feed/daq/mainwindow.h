@@ -28,31 +28,17 @@ public:
 
 private:
     Ui::MainWindow *ui;
-
-    QTcpSocket *tcpSocket;    //9000
-
+    QUdpSocket *udpSocket;    //5000
     RecThread *myThread_1;
-
     Ui:: musicProcess *procress;
 
-
 private slots:
-
-    void RecvTCP();
-       void newTCPConnect();
-       void displayError(QAbstractSocket::SocketError);
-
-
-       void on_pushButton_clicked();
-
-       void UpdateSlot(int num1,int num2,int s);
-
-       void readIni();
-       void setIni();
-       void on_lineEdit_IP_textEdited(const QString &arg1);
-
-
-       void on_pushButton_Play_clicked();
+    void on_pushButton_clicked();
+    void UpdateSlot(int num1,int num2,int s);
+    void readIni();
+    void setIni();
+    void on_lineEdit_IP_textEdited(const QString &arg1);
+    void on_pushButton_Play_clicked();
 };
 
 #endif // MAINWINDOW_H
