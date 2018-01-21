@@ -96,6 +96,8 @@ void MainWindow::udp_rec_5000()
 
     this->ui->label_21->setText(arr.toHex());
 
+    qDebug()<<"recData";
+    qDebug()<<"===================================================";
     QString strIP=IP_sensor.toString().mid(7,17);
     if(strIP=="192.168.1.103")  //sensor_1
     {
