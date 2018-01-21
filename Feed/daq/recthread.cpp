@@ -24,25 +24,23 @@ RecThread::~RecThread()
 
 }
 
-bool RecThread::checkIsNew(char data[])
+bool RecThread::checkIsNew(char &data,int &k0)
 {
-    int len=sizeof(data)/sizeof(data[0]);
-    int judgeLen=7;
+    int judgeLen=10;
     int samePos=0;
 
-    for(int i=0;i<len-judgeLen;i++){
-        for(int j=0;j<judgeLen;j++){//判断前六位是否有一致的
-            if(data[i+j]!=pre_rfid[j]&&len>=i+27){
+    for(int i=0;i<k0-judgeLen;i++){
+        for(int j=0;j<judgeLen;j++){//判断前七位是否有一致的
+            if(data[i+j]!=pre_rfid[j+2]){//取per_rfid中的去除前两位的数组
                 samePos+=1;
             }
         }
-        //取后面judgeLen的长度来判断是否一致
-        if(samePos=judgeLen){
+        //允许有两位出现突变
+        if(samePos>=judgeLen-2){
             return false;
         }
     }
     return true;
-
 }
 
 void RecThread::run()
@@ -85,10 +83,10 @@ void RecThread::run()
     if((fd_usb0 = serialOpen("/dev/ttyUSB2",9600)) < 0)
          qDebug()<<"open usb0 error\n";
 
-    if((fd_usb1 = serialOpen("/dev/ttyUSB0",9600)) < 0)
+    if((fd_usb1 = serialOpen("/dev/ttyUSB1",9600)) < 0)
          qDebug()<<"open usb1 error\n";
 
-    if((fd_usb2 = serialOpen("/dev/ttyUSB3",9600)) < 0)
+    if((fd_usb2 = serialOpen("/dev/ttyUSB0",9600)) < 0)
          qDebug()<<"open usb2 error\n";
 
     //serialPrintf(fd,"Hello World!!!");
@@ -137,7 +135,6 @@ void RecThread::run()
     while(1)
     {
         inLevel=digitalRead(0);//食槽是否还有食物
-        qDebug()<<"inLevel="<<inLevel;
 
         //usb2用于称重
         for(i=0;i<8;i++)
@@ -191,7 +188,7 @@ void RecThread::run()
                 curr_rfid[i]=rx_rfid[i];
             }
             //判断是否为新的ID，判断前几位是否有连续一致
-            isNew=checkIsNew(pre_rfid);
+            isNew=checkIsNew(pre_rfid,K0);
 
         }
 
@@ -269,19 +266,19 @@ void RecThread::ResetSlot()
 
 void RecThread::getFood()
 {
-    digitalWrite(IN3, HIGH); //下面的继电器关
+    digitalWrite(IN3, HIGH); //下面的气缸关
     QThread::msleep(4000);
 
-    digitalWrite(IN1, LOW);  //上面的继电器开
+    digitalWrite(IN1, LOW);  //上面的气缸开
     QThread::msleep(4000);
 
-    digitalWrite(IN1 ,HIGH); //上面的继电器关
+    digitalWrite(IN1 ,HIGH); //上面的气缸关
     QThread::msleep(4000);
 
-    digitalWrite(IN3, LOW);  //下面的继电器开
+    digitalWrite(IN3, LOW);  //下面的气缸开
     QThread::msleep(3000);
 
-    //继电器关
+    //关气缸
     digitalWrite(IN1,HIGH);
     digitalWrite(IN3,HIGH);
 }

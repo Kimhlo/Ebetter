@@ -27,7 +27,7 @@ private:
    char pre_rfid[28];
    bool isNew;
 
-   bool checkIsNew(char data[]);
+   bool checkIsNew(char &data, int &k0);
 protected:
     void run();
 
