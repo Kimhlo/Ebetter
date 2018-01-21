@@ -24,23 +24,29 @@ RecThread::~RecThread()
 
 }
 
-bool RecThread::checkIsNew(char &data,int &k0)
+bool RecThread::checkIsNew(char data[], int &k0)
 {
-    int judgeLen=10;
+//    int len=sizeof(data)/sizeof(data[0]);
+    int judgeLen=17;
     int samePos=0;
+//    qDebug()<<"incheck"<<sizeof(data);
 
     for(int i=0;i<k0-judgeLen;i++){
         for(int j=0;j<judgeLen;j++){//判断前七位是否有一致的
-            if(data[i+j]!=pre_rfid[j+2]){//取per_rfid中的去除前两位的数组
+            if(data[i+j]==pre_rfid[j+10]){
                 samePos+=1;
             }
+            //取后面judgeLen的长度来判断是否一致
+            if(samePos>=judgeLen-2){
+                qDebug()<<"The same="<<samePos;
+                return false;
+            }
         }
-        //允许有两位出现突变
-        if(samePos>=judgeLen-2){
-            return false;
-        }
+        samePos=0;
+
     }
     return true;
+
 }
 
 void RecThread::run()
@@ -70,23 +76,24 @@ void RecThread::run()
     char tempBuf[5];
 
     //检查是否为RFID
-    isNew=true;
+    isNew=false;
     //初始化当前curr_rfid
     for(int m=0;m<28;m++){
         curr_rfid[m]=0;
+        pre_rfid[m]=1;
     }
 
     int fd,fd_usb0,fd_usb1,fd_usb2;
     if(wiringPiSetup() < 0)
          qDebug()<<"ini  error\n";
 
-    if((fd_usb0 = serialOpen("/dev/ttyUSB2",9600)) < 0)
+    if((fd_usb0 = serialOpen("/dev/ttyUSB0",9600)) < 0)
          qDebug()<<"open usb0 error\n";
 
     if((fd_usb1 = serialOpen("/dev/ttyUSB1",9600)) < 0)
          qDebug()<<"open usb1 error\n";
 
-    if((fd_usb2 = serialOpen("/dev/ttyUSB0",9600)) < 0)
+    if((fd_usb2 = serialOpen("/dev/ttyUSB2",9600)) < 0)
          qDebug()<<"open usb2 error\n";
 
     //serialPrintf(fd,"Hello World!!!");
@@ -135,6 +142,7 @@ void RecThread::run()
     while(1)
     {
         inLevel=digitalRead(0);//食槽是否还有食物
+//        qDebug()<<"inLevel="<<inLevel;
 
         //usb2用于称重
         for(i=0;i<8;i++)
@@ -173,7 +181,7 @@ void RecThread::run()
 
         //RFID收到数据
         k0=serialDataAvail (fd_usb0);
-//        qDebug()<<"RFID="<<k0;
+        qDebug()<<"RFID="<<k0;
         //有客官来了，翠花上酸菜
        if(k0>26)
         {
@@ -186,19 +194,21 @@ void RecThread::run()
             for(i=0;i<27;i++)
             {
                 curr_rfid[i]=rx_rfid[i];
+                qDebug()<<"current="<<int(curr_rfid[i]);
             }
             //判断是否为新的ID，判断前几位是否有连续一致
-            isNew=checkIsNew(pre_rfid,K0);
+            isNew=checkIsNew(curr_rfid,k0);
 
         }
 
         //给新的猪哥哥做个全身检查
-        if(isNew)
+        if(isNew&&k0>26)
         {
             qDebug()<<"新的风暴已经来临";
             for(i=0;i<27;i++)
             {
                 pre_rfid[i]=curr_rfid[i];
+                qDebug()<<"per"<<int(pre_rfid[i]);
                 recData[i]=curr_rfid[i];
             }
 
@@ -266,19 +276,19 @@ void RecThread::ResetSlot()
 
 void RecThread::getFood()
 {
-    digitalWrite(IN3, HIGH); //下面的气缸关
+    digitalWrite(IN3, HIGH); //下面的继电器关
     QThread::msleep(4000);
 
-    digitalWrite(IN1, LOW);  //上面的气缸开
+    digitalWrite(IN1, LOW);  //上面的继电器开
     QThread::msleep(4000);
 
-    digitalWrite(IN1 ,HIGH); //上面的气缸关
+    digitalWrite(IN1 ,HIGH); //上面的继电器关
     QThread::msleep(4000);
 
-    digitalWrite(IN3, LOW);  //下面的气缸开
+    digitalWrite(IN3, LOW);  //下面的继电器开
     QThread::msleep(3000);
 
-    //关气缸
+    //继电器关
     digitalWrite(IN1,HIGH);
     digitalWrite(IN3,HIGH);
 }
