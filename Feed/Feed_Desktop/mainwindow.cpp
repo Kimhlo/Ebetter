@@ -99,16 +99,9 @@ void MainWindow::udp_rec_5000()
     //获取数据包地址
     this->ui->label_21->setText(arr.toHex());
 
-<<<<<<< HEAD
 
     //食槽1
     if(strIP=="::ffff:192.168.31.124")
-=======
-    qDebug()<<"recData";
-    qDebug()<<"===================================================";
-    QString strIP=IP_sensor.toString().mid(7,17);
-    if(strIP=="192.168.1.103")  //sensor_1
->>>>>>> 1417e9b57cfd8414a1950655728f7ab311a539e9
     {
         qDebug()<<"dadad";
         char ch_1[2];
