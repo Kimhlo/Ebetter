@@ -82,6 +82,8 @@ void RecThread::run()
     QHash<int,int> light_status_app;  //APP开关对应的灯的状态
 
     QHash<int,int> pre_light_status;
+
+    int tem_light_status[70];
     //=============================================
 
     QThread::msleep(2000);
@@ -350,7 +352,7 @@ void RecThread::run()
 
                 //============================
                 //传感器输入 start
-                if((i>60) && (i<91))
+                if((i>60) && (i<92))
                 {
                     if(inputIO.value(i)>0)  //sensor active,传感器高电平开灯
                     {
@@ -365,7 +367,7 @@ void RecThread::run()
                 //=======================================
 
                 // switch input  usb0  上面块板子的后部分IO 用作开关输入
-                if((i>90) && (i<121))  //switch input
+                if((i>91) && (i<121))  //switch input
                 {
                     if(inputIO.value(i)==0 )  //开关打开
                         light_status_switch[io_light]=1;
@@ -504,19 +506,24 @@ void RecThread::run()
             serialPutchar(fd_usb0,tx0[2]);
             serialPutchar(fd_usb0,'c');
 
+            for(i=41;i<60;i++)  //置灯的状态
+            {
+               tem_light_status[i]=light_status.value(i);
+            }
+
             //给灯带通电
-            light_status[45]=1 ;//西厨感应
-            light_status[41]=1 ;//老人房1
-            light_status[43]=1 ;//一卫1
-            light_status[51]=1 ;//次卫1
-            light_status[52]=1 ;//次卧灯2
-            light_status[55]=1 ;//主卫灯2
-            light_status[54]=1 ;//主卧灯2
+            tem_light_status[45]=1 ;//西厨感应
+            tem_light_status[41]=1 ;//老人房1
+            tem_light_status[43]=1 ;//一卫1
+            tem_light_status[51]=1 ;//次卫1
+            tem_light_status[52]=1 ;//次卧灯2
+            tem_light_status[55]=1 ;//主卫灯2
+            tem_light_status[54]=1 ;//主卧灯2
 
             for(i=41;i<60;i++)  //置灯的状态
             {
               //   sensor_light_status[i]=0;
-                SetSensorLightBit(i,light_status.value(i));
+                SetSensorLightBit(i,tem_light_status[i]);
             }
 
             emit UpdateSignal(0,0,3);
