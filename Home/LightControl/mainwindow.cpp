@@ -157,7 +157,7 @@ void MainWindow::UpdateSlot(int num1,int num2,int s)
 
         pre_doorLightSwitch = doorLightSwitch;
         //================================
-    }
+
     //=================================
     QString ss1,ss2,ss3,ss4,ss5,ss6,ss7,ss8,ss9,ss10,ss11;
     int i;
@@ -312,26 +312,27 @@ void MainWindow::UpdateSlot(int num1,int num2,int s)
      ss9="";
      ss10="";
      ss11="";
-    for(i=0;i<8;i++)
-    {
-     //==========================
-     ss9.append(QString::number(i+1));
-     ss9.append("-");
-     ss9.append(QString::number((tx0[0]>>i) & 0x01 ));
-     ss9.append(" ");
+     for(i=0;i<8;i++)
+     {
+         //==========================
+         ss9.append(QString::number(i+1));
+         ss9.append("-");
+         ss9.append(QString::number((tx0[0]>>i) & 0x01 ));
+         ss9.append(" ");
 
-     ss10.append(QString::number(i+1+8));
-     ss10.append("-");
-     ss10.append(QString::number((tx0[1]>>i) & 0x01 ));
-     ss10.append(" ");
+         ss10.append(QString::number(i+1+8));
+         ss10.append("-");
+         ss10.append(QString::number((tx0[1]>>i) & 0x01 ));
+         ss10.append(" ");
 
-     ss11.append(QString::number(i+1+16));
-     ss11.append("-");
-     ss11.append(QString::number((tx0[2]>>i) & 0x01 ));
-     ss11.append(" ");
-}
+         ss11.append(QString::number(i+1+16));
+         ss11.append("-");
+         ss11.append(QString::number((tx0[2]>>i) & 0x01 ));
+         ss11.append(" ");
+     }
 
-    ui->label_15->setText(ss9 + ss10 + ss11.mid(0,20));  //output
+     ui->label_15->setText(ss9 + ss10 + ss11.mid(0,20));  //output
+    }
 }
 
 void MainWindow::setIni()

@@ -101,7 +101,7 @@ void MainWindow::udp_rec_5000()
 
 
     //食槽1
-    if(strIP=="::ffff:192.168.31.124")
+    if(strIP=="::ffff:192.168.1.103")
     {
         qDebug()<<"dadad";
         char ch_1[2];
