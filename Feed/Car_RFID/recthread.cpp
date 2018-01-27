@@ -198,7 +198,6 @@ void RecThread::stop()
      digitalWrite(IN1_4, HIGH);
      digitalWrite(IN1_3, HIGH);
      digitalWrite(IN1_2, HIGH);
-     digitalWrite(IN1_1,HIGH);
      sendData[1]=0x04;
 }
 

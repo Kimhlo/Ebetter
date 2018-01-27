@@ -126,16 +126,22 @@ void MainWindow::on_buttonRun_clicked()
 {
     flag_run=1;
     sendData[0]=0x01;//运行
-    on_buttonForward_clicked();
+    sendData[1]=0x01;
+    digitalWrite(IN1_4, HIGH);
+    digitalWrite(IN1_3, LOW);
+    digitalWrite(IN1_2, HIGH);
     qDebug()<<"run";
 }
 
 //sleep
 void MainWindow::on_buttonSleep_clicked()
 {
-    on_buttonStop_clicked();
+    digitalWrite(IN1_3, HIGH);
+    digitalWrite(IN1_4, HIGH);
+    digitalWrite(IN1_2, HIGH);
     flag_run=0;
     sendData[0]=0x00;//运行
+    sendData[1]=0x04;
     qDebug()<<"sleep";
 }
 
@@ -148,6 +154,7 @@ void MainWindow::on_buttonForward_clicked()
     digitalWrite(IN1_4, HIGH);
     digitalWrite(IN1_3, LOW);
     digitalWrite(IN1_2, HIGH);
+    sendData[0]=0x03;
     sendData[1]=0x01;//前进
     qDebug()<<"forward";
 }
@@ -157,6 +164,7 @@ void MainWindow::on_buttonBack_clicked()
     digitalWrite(IN1_3, HIGH);
     digitalWrite(IN1_2, LOW);
     digitalWrite(IN1_4, HIGH);
+    sendData[0]=0x03;
     sendData[1]=0x02;//返回
     qDebug()<<"back";
 }
@@ -176,6 +184,7 @@ void MainWindow::on_buttonThrow_clicked()
      //forward
     digitalWrite(IN1_3, LOW);
     delay(1000);
+    sendData[0]=0x03;
     sendData[1]=0x03;//投食
     qDebug()<<"throw food";
 }
@@ -185,7 +194,7 @@ void MainWindow::on_buttonStop_clicked()
     digitalWrite(IN1_3, HIGH);
     digitalWrite(IN1_4, HIGH);
     digitalWrite(IN1_2, HIGH);
-    digitalWrite(IN1_1,HIGH);
+    sendData[0]=0x03;
     sendData[1]=0x04;//停止
     qDebug()<<"stop";
 }
@@ -204,7 +213,7 @@ void MainWindow::recAndControl()
 
     //check the first bit
     if(datagram.at(0)==0x01){
-        on_buttonForward_clicked();
+        on_buttonRun_clicked();
     }else if(datagram.at(0)==0x00){
         on_buttonSleep_clicked();
     }//end if first bit
