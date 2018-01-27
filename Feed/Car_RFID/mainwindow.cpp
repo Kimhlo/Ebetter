@@ -19,6 +19,7 @@ MainWindow::MainWindow(QWidget *parent) :
     readIni();
     flag_run=0;
 
+    setWindowTitle("Car");
     //udpSocket init
     serverIP=ui->lineEdit_IP->text();
     serverPort=5000;
@@ -37,6 +38,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //init the timer
     timer1=new QTimer;
     timer2=new QTimer;
+//    timer1->setInterval(500);
     timer1->start(500);//send the status to the server in the frequence of 0.5s
     connect(timer1,SIGNAL(timeout()),
             this,SLOT(sendToServer()));
@@ -82,7 +84,7 @@ void MainWindow::UpdateSlot(int num1,int num2,int s)
    }
    if(s==1){
        ui->label_4->setText("arrive at 1");
-       timer2->start(1500);
+       timer2->start(7000);
    }
    if(s==2){
        ui->label_4->setText("arrive at 2");
@@ -181,8 +183,9 @@ void MainWindow::on_buttonThrow_clicked()
 void MainWindow::on_buttonStop_clicked()
 {
     digitalWrite(IN1_3, HIGH);
-    digitalWrite(IN1_2, LOW);
     digitalWrite(IN1_4, HIGH);
+    digitalWrite(IN1_2, HIGH);
+    digitalWrite(IN1_1,HIGH);
     sendData[1]=0x04;//停止
     qDebug()<<"stop";
 }
@@ -232,12 +235,14 @@ void MainWindow::sendToServer()
     data[3]=sendData[3];
     //send the datagram
     udpSocket->writeDatagram(data,serverIP,serverPort);
+//    qDebug()<<"toServer";
 }
 
 void MainWindow::missRFID()
 {
     timer2->stop();
     on_buttonBack_clicked();
+    qDebug()<<"miss RFID";
 }
 
 
