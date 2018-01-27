@@ -51,8 +51,8 @@ text-decoration: underline;</string>
     <property name="geometry">
      <rect>
       <x>780</x>
-      <y>320</y>
-      <width>111</width>
+      <y>310</y>
+      <width>91</width>
       <height>31</height>
      </rect>
     </property>
@@ -60,7 +60,7 @@ text-decoration: underline;</string>
      <string notr="true">font: 75 16pt &quot;Agency FB&quot;;</string>
     </property>
     <property name="text">
-     <string>小车状态：</string>
+     <string>小车状态</string>
     </property>
    </widget>
    <widget class="QLabel" name="label_8">
@@ -115,8 +115,8 @@ text-decoration: underline;</string>
     <property name="geometry">
      <rect>
       <x>880</x>
-      <y>320</y>
-      <width>201</width>
+      <y>310</y>
+      <width>221</width>
       <height>31</height>
      </rect>
     </property>
@@ -317,7 +317,7 @@ text-decoration: underline;</string>
     <property name="geometry">
      <rect>
       <x>1130</x>
-      <y>390</y>
+      <y>370</y>
       <width>201</width>
       <height>71</height>
      </rect>
@@ -374,119 +374,73 @@ text-decoration: underline;</string>
      <enum>Qt::Vertical</enum>
     </property>
    </widget>
-   <widget class="QWidget" name="verticalLayoutWidget">
-    <property name="geometry">
-     <rect>
-      <x>1010</x>
-      <y>370</y>
-      <width>77</width>
-      <height>112</height>
-     </rect>
-    </property>
-    <layout class="QVBoxLayout" name="verticalLayout_2">
-     <item>
-      <widget class="QPushButton" name="buttonForward">
-       <property name="text">
-        <string>前进</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="buttonBack">
-       <property name="text">
-        <string>后退</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="buttonThrow">
-       <property name="text">
-        <string>投食</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="buttonStop">
-       <property name="text">
-        <string>停车</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </widget>
-   <widget class="QWidget" name="verticalLayoutWidget_2">
+   <widget class="QWidget" name="horizontalLayoutWidget_2">
     <property name="geometry">
      <rect>
       <x>850</x>
-      <y>380</y>
-      <width>61</width>
-      <height>80</height>
+      <y>370</y>
+      <width>162</width>
+      <height>121</height>
      </rect>
     </property>
-    <layout class="QVBoxLayout" name="verticalLayout_4">
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
-      <widget class="QPushButton" name="buttonRun">
-       <property name="text">
-        <string>启动</string>
-       </property>
-      </widget>
+      <layout class="QVBoxLayout" name="verticalLayout_4">
+       <item>
+        <widget class="QPushButton" name="buttonCarRun">
+         <property name="text">
+          <string>启动</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="buttonCarSleep">
+         <property name="text">
+          <string>待机</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item>
-      <widget class="QPushButton" name="buttonSleep">
-       <property name="text">
-        <string>休眠</string>
-       </property>
-      </widget>
+      <layout class="QVBoxLayout" name="verticalLayout_5">
+       <item>
+        <widget class="QPushButton" name="buttonForward">
+         <property name="text">
+          <string>前进</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="buttonBack">
+         <property name="text">
+          <string>后退</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="buttonStop">
+         <property name="text">
+          <string>停止</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="buttonThrow">
+         <property name="text">
+          <string>投食</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
     </layout>
-   </widget>
-   <widget class="QLabel" name="label_2">
-    <property name="geometry">
-     <rect>
-      <x>780</x>
-      <y>410</y>
-      <width>71</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>Candara</family>
-      <pointsize>11</pointsize>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
-    </property>
-    <property name="text">
-     <string>自动模式</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_4">
-    <property name="geometry">
-     <rect>
-      <x>930</x>
-      <y>410</y>
-      <width>71</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>Candara</family>
-      <pointsize>11</pointsize>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
-    </property>
-    <property name="text">
-     <string>手动模式</string>
-    </property>
    </widget>
    <widget class="QLabel" name="label_9">
     <property name="geometry">
      <rect>
       <x>1180</x>
-      <y>330</y>
+      <y>310</y>
       <width>111</width>
       <height>31</height>
      </rect>

@@ -15,29 +15,37 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-
+    /********************************************
+     * udp通信部分定义
+    ********************************************/
     bool retBind;
     udpSocket_5000 = new QUdpSocket;
     udpSocket_6000 = new QUdpSocket;
-
-    udpSocket_5000->setReadBufferSize(512);   //现场
+    //现场数据
+    udpSocket_5000->setReadBufferSize(512);
     retBind=udpSocket_5000-> bind(5000,QUdpSocket::ShareAddress);
     if(false==retBind)
     {
         qDebug()<<"bind port:5000 error";
         return;
     }
-    //------------------------------------------
-    udpSocket_6000->setReadBufferSize(512);   //app
+
+    //app数据
+    udpSocket_6000->setReadBufferSize(512);
     retBind=udpSocket_6000-> bind(6000,QUdpSocket::ShareAddress);
     if(false==retBind)
     {
         qDebug()<<"bind port:6000 error";
         return;
     }
+
+    //udp通信信号和槽函数连接
      connect(udpSocket_5000, SIGNAL(readyRead()), this, SLOT(udp_rec_5000()));
      connect(udpSocket_6000, SIGNAL(readyRead()), this, SLOT(udp_rec_6000()));
 
+     //小车的地址
+     IP_car.setAddress("192.168.1.200");
+    //---------------------------------------------------------------------------------------------
      /********************************************
       * 获取视频部分
      ********************************************/
@@ -63,6 +71,11 @@ MainWindow::~MainWindow()
 {
     delete ui;
 }
+
+/********************************
+ * 视频获取部分
+********************************/
+//处理获取的图片
 void MainWindow::getReply(QNetworkReply *reply)
 {
     //获取图片数据
@@ -76,13 +89,17 @@ void MainWindow::getReply(QNetworkReply *reply)
     ui->label->setPixmap(QPixmap::fromImage(image2,Qt::AutoColor));
 
 }
-
+//再次获取图片
 void MainWindow::updatePic()
 {
 //    qDebug()<<"updata pic";
     request.setUrl(QUrl(PU));//设置访问的网址
     manager->get(request);//用get方法获取图像
 }
+
+/********************************
+ * 5000端口收到的报文及其处理
+********************************/
 void MainWindow::udp_rec_5000()
 {
     QByteArray arr;
@@ -91,10 +108,9 @@ void MainWindow::udp_rec_5000()
     {
         arr.resize(udpSocket_5000->pendingDatagramSize());
         udpSocket_5000->readDatagram(arr.data(), arr.size(),&IP_sensor,&port);
-//        IP_sensor=udpSocket_5000->localAddress();
     }
     QString strIP= IP_sensor.toString();
-    qDebug()<<"IP="<<strIP;
+//    qDebug()<<"IP="<<strIP;
 
     //获取数据包地址
     this->ui->label_21->setText(arr.toHex());
@@ -103,7 +119,6 @@ void MainWindow::udp_rec_5000()
     //食槽1
     if(strIP=="::ffff:192.168.1.103")
     {
-        qDebug()<<"dadad";
         char ch_1[2];
         char ch_2[2];
         unsigned short val;
@@ -150,8 +165,35 @@ void MainWindow::udp_rec_5000()
        QString strIP=IP_sensor.toString().mid(7,17);
        this->ui->label_21->setText(arr.toHex());
     }
+    if(strIP=="::ffff:192.168.1.200")  //car
+    {
+        QString carStatus="";
+        if(arr.at(0)==0x01){
+            carStatus.append("自动投食中：");
+        }else if(arr.at(0)==0x00){
+            carStatus.append("正在待机中：");
+        }else if(arr.at(0)==0x03){
+            carStatus.append("手动操作中：");
+        }
+        if(arr.at(1)==0x01){
+            carStatus.append("前进");
+        }else if(arr.at(1)==0x02){
+            carStatus.append("后退");
+        }else if(arr.at(1)==0x03){
+            carStatus.append("投食");
+        }else if(arr.at(1)==0x04){
+            carStatus.append("停止");
+        }else{
+            carStatus.append("待机");
+        }
+
+        this->ui->label_carStatus->setText(carStatus);
+    }
 }
 
+/********************************
+ * 6000端口收到的报文及其处理
+********************************/
 void MainWindow::udp_rec_6000()
 {
     QByteArray arr;
@@ -168,6 +210,9 @@ void MainWindow::udp_rec_6000()
 
 }
 
+/********************************
+ * 数据库处理部分
+********************************/
 void MainWindow::db_test()
 {
         QSqlDatabase db = QSqlDatabase::addDatabase("QODBC");
@@ -206,6 +251,9 @@ void MainWindow::db_test()
         query.exec();
 }
 
+/********************************
+ * 控制窗户部分
+********************************/
 //开上方窗户
 void MainWindow::on_pushButton_Open_up_clicked()
 {
@@ -311,4 +359,63 @@ void MainWindow::on_pushButton_Close_down_clicked()
        qDebug()<<"open window error";
        return;
     }
+}
+
+/********************************
+ * 控制小车部分
+********************************/
+//小车运行
+void MainWindow::on_buttonRun_clicked()
+{
+
+    QByteArray data;
+    data.resize(2);
+    data[0]=0x01;
+    data[1]=0x01;
+    udpSocket_5000->writeDatagram(data,IP_car,7001);
+}
+//小车休眠
+void MainWindow::on_buttonSleep_clicked()
+{
+    QByteArray data;
+    data.resize(2);
+    data[0]=0x00;
+    data[1]=0x04;
+    udpSocket_5000->writeDatagram(data,IP_car,7001);
+}
+//小车手动前进
+void MainWindow::on_buttonForward_clicked()
+{
+    QByteArray data;
+    data.resize(2);
+    data[0]=0x00;
+    data[1]=0x01;
+    udpSocket_5000->writeDatagram(data,IP_car,7001);
+}
+//小车手动返回
+void MainWindow::on_buttonBack_clicked()
+{
+    QByteArray data;
+    data.resize(2);
+    data[0]=0x00;
+    data[1]=0x02;
+    udpSocket_5000->writeDatagram(data,IP_car,7001);
+}
+//小车手动投料
+void MainWindow::on_buttonThrow_clicked()
+{
+    QByteArray data;
+    data.resize(2);
+    data[0]=0x00;
+    data[1]=0x03;
+    udpSocket_5000->writeDatagram(data,IP_car,7001);
+}
+//小车手动停止
+void MainWindow::on_buttonStop_clicked()
+{
+    QByteArray data;
+    data.resize(2);
+    data[0]=0x00;
+    data[1]=0x04;
+    udpSocket_5000->writeDatagram(data,IP_car,7001);
 }

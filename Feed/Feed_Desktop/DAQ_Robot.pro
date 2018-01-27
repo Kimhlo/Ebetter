@@ -3,7 +3,6 @@
 # Project created by QtCreator 2017-04-07T17:17:08
 #
 #-------------------------------------------------
-
 QT       += core gui
 
 QT += sql
@@ -33,3 +32,4 @@ HEADERS  += mainwindow.h
 FORMS    += mainwindow.ui
 QT += network
 QT += core
+

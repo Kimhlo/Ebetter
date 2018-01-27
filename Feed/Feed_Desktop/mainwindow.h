@@ -43,6 +43,7 @@ private:
     QByteArray data3;
 
     QHostAddress IP_window;
+    QHostAddress IP_car;
 
     //pig
     float pig_temp;
@@ -71,6 +72,13 @@ public slots:
     void on_pushButton_Close_up_clicked();
     void on_pushButton_Open_down_clicked();
     void on_pushButton_Close_down_clicked();
+private slots:
+    void on_buttonRun_clicked();
+    void on_buttonSleep_clicked();
+    void on_buttonForward_clicked();
+    void on_buttonBack_clicked();
+    void on_buttonThrow_clicked();
+    void on_buttonStop_clicked();
 };
 
 #endif // MAINWINDOW_H
