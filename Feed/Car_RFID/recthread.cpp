@@ -120,14 +120,15 @@ void RecThread::run()
                 sum3=0;
             }
             if(sum3==13&&curr_status==2){//reach the second crib
+                //Please don't change the emit signal order
+                emit UpdateSignal(0,0,2);
+                emit UpdateSignal(0,0,101);
                 qDebug()<<"stop2";
+
                 throwFood();
                 curr_status=3;
                 back();
                 sendData[2]=0x02;//on the back way
-
-                emit UpdateSignal(0,0,101);
-                emit UpdateSignal(0,0,2);
 
                 sum1=0;
                 sum2=0;
@@ -194,9 +195,10 @@ void RecThread::back()
 //stop car
 void RecThread::stop()
 {
-     digitalWrite(IN1_4, LOW);
+     digitalWrite(IN1_4, HIGH);
      digitalWrite(IN1_3, HIGH);
      digitalWrite(IN1_2, HIGH);
+     digitalWrite(IN1_1,HIGH);
      sendData[1]=0x04;
 }
 

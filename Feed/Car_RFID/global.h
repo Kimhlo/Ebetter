@@ -7,4 +7,4 @@
 extern char recData[64];
 extern int flag_run;
 extern int curr_status;
-extern char sendData[24];
+extern char sendData[4];
