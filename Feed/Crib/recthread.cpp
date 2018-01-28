@@ -170,6 +170,9 @@ void RecThread::run()
     pinMode(7, INPUT);
     //吃完的标志
     int eatFinish=0;
+    //have eaten
+    int numberOld=0;
+
     //循环检测
     while(1)
     {
@@ -217,20 +220,24 @@ void RecThread::run()
             }
 
             //检测二维数组中是否有已经存在的RFID
-            int numberNew=0;
             for(int num=0;num<eatenPig+1;num++){
                 for(int m=0;m<27;m++){
                     pre_rfid[m]=preRfidAll[num][m];
                 }
                 //判断是否为新的ID，判断前几位是否有连续一致
-                if(checkIsNew(curr_rfid,k0)){
-                    numberNew+=1;
+                if(!checkIsNew(curr_rfid,k0)){
+                    numberOld+=1;
                 }
             }//end for number
 
-            if(numberNew==eatenPig+1){
+
+            qDebug()<<"numberOld="<<numberOld;
+            if(numberOld>=1){
+                isNew=false;
+            }else {
                 isNew=true;
             }
+            numberOld=0;
         }
 
         //给新的猪哥哥做个全身检查
