@@ -24,10 +24,14 @@ class RecThread:public QThread
 
 private:
    char curr_rfid[28];
+   char preRfidAll[30][28];
    char pre_rfid[28];
+   int eatenPig;
    bool isNew;
-
    bool checkIsNew(char data[],int &k0);
+   void initGPIO();
+   float getTemper(unsigned char data[]);
+   long getWeight(unsigned char data[]);
 protected:
     void run();
 
