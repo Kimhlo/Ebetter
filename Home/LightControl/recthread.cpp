@@ -356,6 +356,8 @@ void RecThread::run()
                 {
                     if(inputIO.value(i)==0)  //开关低电平开灯
                          light_status_switch[io_light]= 1; //开灯
+                    else
+                        light_status_switch[io_light]= 0; //关灯
                 }
                 // 开关输入 end
 
@@ -371,6 +373,8 @@ void RecThread::run()
                         //传感器控制的当前灯点亮
                         light_status_sensor[io_light]=1;
                     }
+                    else
+                        light_status_sensor[io_light]=0;
                 }
                 //传感器输入 end
                 //=======================================
@@ -380,6 +384,8 @@ void RecThread::run()
                 {
                     if(inputIO.value(i)==0 )  //开关打开
                         light_status_switch[io_light]=1;
+                    else
+                        light_status_switch[io_light]=0;
                 }
                 //=============================
             }  //end 1-120 loop
@@ -393,13 +399,14 @@ void RecThread::run()
                 {
                 //===========================
                 //手机控制  优先级最低
+                /*
                 if((pre_light_status_app.value(io_light) ^ light_status_app.value(io_light))==1 ) //手机控制的开关翻转
                  {
                     if(light_status_app.value(io_light)==1)
                        light_status[io_light]=1;
                     else
                        light_status[io_light]=0;
-                 }
+                 }*/
                 //=================================
               //  qDebug()<<"flag_switch_delay_light="<<io_light<<flag_switch_delay_light[io_light];
                 //传感器控制
@@ -420,21 +427,15 @@ void RecThread::run()
                             cnt_sensor_delay_light[io_light]=0;
                             flag_sensor_delay_light[io_light]=0x01;
                             light_status[io_light]=1;       //置亮的状态
-                          //  qDebug()<<"sensor delay start ="<<io_light;
+                            qDebug()<<"sensor delay start ="<<io_light;
                         }
                     }
 
-                    if(flag_switch_delay_light[io_light]==0x01) //传感器被开关屏蔽
+                    if((flag_switch_delay_light[io_light]==0x01) || (flag_switch_delay_light[io_light]==0x02) )//传感器被开关屏蔽
                     {
                         cnt_sensor_delay_light[io_light]=0;
                         flag_sensor_delay_light[io_light]=0x00;
-                       // qDebug()<<"传感器被开关屏蔽" <<io_light ;
-                    }
-                    if(flag_switch_delay_light[io_light]==0x02) //传感器被开关屏蔽
-                    {
-                        cnt_sensor_delay_light[io_light]=0;
-                        flag_sensor_delay_light[io_light]=0x00;
-                       // qDebug()<<"传感器被开关屏蔽  open" <<io_light ;
+                        qDebug()<<"传感器被开关屏蔽" <<io_light ;
                     }
                  }
 
@@ -445,12 +446,16 @@ void RecThread::run()
                    // qDebug()<<"cnt_sensor_delay_light="<<io_light<<cnt_sensor_delay_light[io_light];
                  }
 
-                 if(cnt_sensor_delay_light[io_light]==200) //传感器延时结束
+                 if(cnt_sensor_delay_light[io_light]==400) //传感器延时结束
                  {
                       cnt_sensor_delay_light[io_light]=0;
                       flag_sensor_delay_light[io_light]=0x00;
-                      light_status[io_light]=0;
-                   //   qDebug()<<"sensor delay end"<<io_light<<cnt_sensor_delay_light[io_light];
+
+                      if(light_status_sensor.value(io_light)==1)
+                          light_status[io_light]=1;       //置亮的状态
+                      else
+                          light_status[io_light]=0;       //置灭的状态
+                      qDebug()<<"sensor delay end"<<io_light<<cnt_sensor_delay_light[io_light];
                  }
                 }
                 //=================================
@@ -470,10 +475,11 @@ void RecThread::run()
                         light_status[io_light]=0;
 
                 }
-                if(light_status_switch.value(io_light)==1)
+                if(light_status_switch.value(io_light)==1) //开关处于开的状态
                 {
                     cnt_switch_delay_light[io_light]=0;
                     flag_switch_delay_light[io_light]=0x02;
+                    light_status[io_light]=1;
                 }
 
                 if(flag_switch_delay_light[io_light]==0x01)
@@ -485,7 +491,7 @@ void RecThread::run()
                        light_status[io_light]=0;
                 }
 
-                if(cnt_switch_delay_light[io_light]==200) //开关屏蔽传感器结束
+                if(cnt_switch_delay_light[io_light]==400) //开关屏蔽传感器结束
                 {
                      cnt_switch_delay_light[io_light]=0;
                      flag_switch_delay_light[io_light]=0x00;
@@ -531,7 +537,7 @@ void RecThread::run()
             if((pre_io_1 ^ io_1==1) || (pre_io_7 ^ io_7==1) || (pre_io_15 ^ io_15==1) || (pre_io_28 ^ io_28==1) || (pre_io_30 ^ io_30==1) || ((pre_io_41 ^ io_41) ==1) || ((pre_io_43 ^ io_43) ==1) || ((pre_io_45 ^ io_45) ==1)|| ((pre_io_51 ^ io_51) ==1) || ((pre_io_52 ^ io_52) ==1) || ((pre_io_54 ^ io_54) ==1) || ((pre_io_55 ^ io_55) ==1) )
             {
                 emit UpdateSignal(0,0,5);
-               // qDebug()<<"send to ph =";
+              //  qDebug()<<"send to ph =";
             }
 
             pre_io_7=io_7;
