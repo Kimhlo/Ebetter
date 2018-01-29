@@ -252,8 +252,7 @@ void RecThread::run()
 //                qDebug()<<"per"<<int(pre_rfid[i]);
                 recData[i]=curr_rfid[i];
             }
-            //why not come some music!!!
-            emit UpdateSignal(0,0,1);
+//            emit UpdateSignal(0,0,1);
             /*************************
              * usb1用于红外检测
             **************************/
@@ -288,7 +287,7 @@ void RecThread::run()
                 rx_weight[i]=serialGetchar(fd_usb2);
                 qDebug()<<"weight"<<i<<"="<< rx_weight[i];
             }
-            //将重量数据写入相应的
+            //将重量数据写入相应的位置
             for(i=0;i<4;i++){
                 recData[i+31]=rx_weight[i+3];
             }
@@ -302,18 +301,18 @@ void RecThread::run()
             eatenPig+=1;
 
         }//读取新猪的数据结束
+        if(inLevel==1&&eatFinish==0){
+          recData[36]=1;//吃完
+          eatFinish=1;
+          qDebug()<<"劳资整完了饭";
+          emit UpdateSignal(0,0,1); //显示收到的数据
+        }else if(inLevel==0&&eatFinish==1){
+            recData[36]=0;
+            eatFinish=0;
+            qDebug()<<"人家还没吃完";
+          }//end if inLevel
 
-       if(inLevel==1&&eatFinish==0){
-         recData[36]=1;//吃完
-         eatFinish=1;
-         qDebug()<<"劳资整完了饭";
 
-         emit UpdateSignal(0,0,1); //显示收到的数据
-       }else if(inLevel==0&&eatFinish==1){
-         recData[36]=0;
-         eatFinish=0;
-         qDebug()<<"人家还没吃完";
-       }
 
     }
 }

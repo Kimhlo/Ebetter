@@ -28,4 +28,5 @@ HEADERS  += mainwindow.h \
 FORMS    += mainwindow.ui
 LIBS     += -lwiringPi
 
-DISTFILES +=
+DISTFILES += \
+    README.md

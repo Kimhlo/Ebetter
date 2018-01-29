@@ -72,6 +72,30 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+float MainWindow::getTemper(unsigned char data[])
+{
+    float temper=0.0;
+    temper= (data[28]*256+data[29])/10.0;
+    qDebug()<<"temper="<<temper;
+    return temper;
+}
+
+float MainWindow::getWeight(unsigned char data[])
+{
+    float nuitKg=2345.0;
+    long beginWeight=12345;
+    long weightNumber=0;
+    float weight=0.0;
+    long temp1=long (data[31])<<24;
+    long temp2=long (data[32])<<16;
+    long temp3=long (data[33])<<8;
+    long temp4=long (data[34]);
+    weightNumber=temp1|temp2|temp3|temp4;//得到传上来的数据
+    weight=(weightNumber-beginWeight)/nuitKg;
+    qDebug()<<"weight="<<weight;
+    return weight;
+}
+
 /********************************
  * 视频获取部分
 ********************************/
@@ -109,37 +133,26 @@ void MainWindow::udp_rec_5000()
         arr.resize(udpSocket_5000->pendingDatagramSize());
         udpSocket_5000->readDatagram(arr.data(), arr.size(),&IP_sensor,&port);
     }
-    QString strIP= IP_sensor.toString();
-//    qDebug()<<"IP="<<strIP;
+    QString strIP= IP_sensor.toString().mid(7,13);
 
     //获取数据包地址
     this->ui->label_21->setText(arr.toHex());
 
 
     //食槽1
-    if(strIP=="::ffff:192.168.1.103")
+    if(strIP=="192.168.1.103")
     {
-        char ch_1[2];
-        char ch_2[2];
-        unsigned short val;
-        short dt;
-        //=============================
-        QString str_temp;
-        str_temp.append(QString::number(arr[27]-48));
-        str_temp.append(QString::number(arr[28]-48));
-        str_temp.append(".");
-        str_temp.append(QString::number(arr[30]-48));
+        unsigned char data[arr.size()];
+        float temper=0.0;
+        float weight=0.0;
+        for(int m=0;m<arr.size();m++){
+            data[m]=arr.at(m);
+        }
+        temper=getTemper(data);
+        weight=getWeight(data);
 
-        float weigh=0;
-        ch_2[0]=arr[31];
-        ch_2[1]=arr[32];
-        ch_2[2]=arr[33];
-        ch_2[3]=arr[34];
-        val =*(int *)ch_2;
-        weigh=(float)val *0.00001;
-
-        ui->label_pig_temp->setText(str_temp);
-        ui->label_weight->setText(QString::number(weigh));
+        ui->label_pig_temp->setText(QString::number(temper));
+        ui->label_weight->setText(QString::number(weight));
         ui->label_rfid->setText(this->ui->label_21->text().mid(0,54));
 
         if(arr[36]==1)
@@ -149,23 +162,23 @@ void MainWindow::udp_rec_5000()
         // ui->label_22->setText(QString::number(arr[43]));
     }
     //============================================
-    if(strIP=="::ffff:192.168.1.104")  //sensor_2
+    if(strIP=="192.168.1.104")  //sensor_2
     {
         this->ui->label_23->setText(arr.toHex());
         ui->label_rfid_2->setText(this->ui->label_23->text().mid(0,54));
     }
 
-    if(strIP=="::ffff:192.168.1.107")  //windows_1
+    if(strIP=="192.168.1.107")  //windows_1
     {
        QString strIP=IP_sensor.toString().mid(7,17);
        this->ui->label_21->setText(arr.toHex());
     }
-    if(strIP=="::ffff:192.168.1.109")  //windows_2
+    if(strIP=="192.168.1.109")  //windows_2
     {
        QString strIP=IP_sensor.toString().mid(7,17);
        this->ui->label_21->setText(arr.toHex());
     }
-    if(strIP=="::ffff:192.168.1.200")  //car
+    if(strIP=="192.168.1.200")  //car
     {
         QString carStatus="";
         if(arr.at(0)==0x01){

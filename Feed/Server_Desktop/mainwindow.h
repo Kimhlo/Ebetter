@@ -61,6 +61,8 @@ private:
     QNetworkRequest request;
     QString Port,Adress,PU;
 
+    float getTemper(unsigned char data[]);
+    float getWeight(unsigned char data[]);
 public slots:
     void getReply(QNetworkReply *reply);
     void updatePic();

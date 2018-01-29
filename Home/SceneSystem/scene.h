@@ -39,6 +39,7 @@ public:
     QDateTime timeNow;
     int curCloseNight=22;
     int curOpenMorning=7;
+    int curOpenAllTime=8;
     int alarmOpenTime;
     bool alarmStatus=false;
 private:
@@ -66,7 +67,9 @@ public:
     void setCurCloseTime(const int&time);
     void setCurOpenTime(const int&time);
     void setAlarmTime(const int&time);
+    void setAllCurtainOpenTime(const int&time);
     void stopAlarm();
+    void openAllCurtain();
 private:
     //light status
     int lightStatus[12];

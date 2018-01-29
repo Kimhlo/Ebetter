@@ -185,6 +185,18 @@ void PhilipsHue::groupCt(const int &id, const int &ct)
     reply=manager->put(request,jsonData);
 }
 
+void PhilipsHue::groupBri(const int &id, const int &bri)
+{
+    QJsonObject objecet;
+    QJsonDocument doc;
+    QByteArray jsonData;
+    request.setUrl(createUrl("groups",id,"action"));
+    objecet.insert("bri",bri);
+    doc.setObject(objecet);
+    jsonData=doc.toJson();
+    reply=manager->put(request,jsonData);
+}
+
 void PhilipsHue::getColorXY()
 {
     float colorXY[2]={0,0};

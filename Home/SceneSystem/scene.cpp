@@ -74,9 +74,27 @@ void Scene::setAlarmTime(const int &time)
     timeThread->alarmOpenTime=time;
 }
 
+void Scene::setAllCurtainOpenTime(const int &time)
+{
+    timeThread->curOpenAllTime=time;
+}
+
 void Scene::stopAlarm()
 {
-   radio1->pause();
+    radio1->pause();
+}
+
+void Scene::openAllCurtain()
+{
+    //打开所有的窗帘
+    curtain1->open(2,1);
+    curtain1->open(2,2);
+    curtain1->open(3,1);
+    curtain1->open(3,2);
+    curtain1->open(4,1);
+    curtain1->open(4,2);
+    curtain1->open(5,1);
+    curtain1->open(5,2);
 }
 
 
@@ -195,6 +213,7 @@ void Scene::openAlarm()
 {
     //play the music
     radio1->setSongSource(1);
+    radio1->setVolume(7);
     radio1->playNow(1);
 }
 
@@ -208,6 +227,8 @@ void Scene::operateCurtain(int id,int i)
     }else if(i==2){
         qDebug()<<"inOpenHalf";
         curtain1->openHalf(id,2);//openHlaf
+    }else if(i==3){
+        openAllCurtain();
     }
 
 }
@@ -219,28 +240,32 @@ void Scene::updateCt()
             //set the hue light id
             if(i==1&&lightStatus[1]==1){
                 //一楼卫生间
-                qDebug()<<"updateLightCt";
+                hue->groupBri(12,lightData[i].bri);
                 hue->groupCt(12,lightData[i].ct);
             }
             if (i==4&&lightStatus[4]==1) {
                 //二楼次卫生间
+                hue->groupBri(14,lightData[i].bri);
                 hue->groupCt(14,lightData[i].ct);
             }
             if(i==6&&lightStatus[6]==1){
                 //二楼主卫生间
+                hue->groupBri(13,lightData[i].bri);
                 hue->groupCt(13,lightData[i].ct);
             }
             if(i==8&&lightStatus[8]==1){
                 //圆灯
+                hue->groupBri(10,lightData[i].bri);
                 hue->groupCt(10,lightData[i].ct);
             }
             if(i==11&&lightStatus[11]==1){
                 //西厨
+                hue->groupBri(11,lightData[i].bri);
                 hue->lightsCt(id[i],lightData[i].ct);
                 hue->groupCt(11,lightData[i].ct);//light 21,22,23,24
-
             }
             if(lightStatus[i]==1){
+                hue->lightsBri(id[i],lightData[i].bri);
                 hue->lightsCt(id[i],lightData[i].ct);
             }
         }
@@ -335,41 +360,33 @@ CheckThread::CheckThread(QObject *parent)
 void CheckThread::run()
 {
     int hour,perHour,min,perMin;
-    int briChangeTime[10]={100,60,50,50,50,50,50,50,100,150};
+    int briChangeTime[8]={80,60,50,50,50,50,50,120};
     int ct[8]={500,460,420,380,340,300,260,220};
-    float colorHour[20]={0.640075,0.329971,//红色
-                         0.403924,0.19988,//淡紫色
-                         0.452269,0.479094,//橙色
-                         0.419321,0.505255,//黄橙色
-                         0.510352,0.432974,//深黄色
-                         0.18725,0.19406,//淡蓝色
-                         0.150017,0.0600066,//深蓝色
-                         0.224658,0.328741,//淡青色
-                         0.325305,0.402063,//青黄色
-                         0.312716,0.329001};//白色
+//    float colorHour[20]={0.640075,0.329971,//红色
+//                         0.403924,0.19988,//淡紫色
+//                         0.452269,0.479094,//橙色
+//                         0.419321,0.505255,//黄橙色
+//                         0.510352,0.432974,//深黄色
+//                         0.18725,0.19406,//淡蓝色
+//                         0.150017,0.0600066,//深蓝色
+//                         0.224658,0.328741,//淡青色
+//                         0.325305,0.402063,//青黄色
+//                         0.312716,0.329001};//白色
 
     int flagAlarm=0;
-    int flagOpen=0;
+    int flagOpen1=0;
+    int flagOpen2=0;
     int flagClose=0;
     while(1){
         timeNow=QDateTime::currentDateTime();
         hour=timeNow.toString("hh").toInt();
         min=timeNow.toString("mm").toInt();
-        if(mode==1){
-//            for(int i=0;i<10;i++){
-//                if(hour==colorChangeTime[i]&&hour!=perHour){
-//                    for(int j=0;j<12;j++){//change the color
-//                        lightData[j].color[0]=colorHour[2*i];
-//                        lightData[j].color[1]=colorHour[2*i+1];
-//                    }
-//                    lightData[i].bri=briChangeTime[i];
-//                    emit hueInfoChanged();
-//                }
-//            }
 
+        if(mode==1){
             for(int i=0;i<8;i++){//check the hour
                 if(hour==ctChangeTime[i]){
                     for(int j=0;j<4;j++){//check the min
+                        if(perMin==59) perMin=-1;
                         if(min==(j*15)&&perMin<min){
                             //emit the ct change signal
                             qDebug()<<"ctChanged"<<ct[i]-10*j;
@@ -377,6 +394,7 @@ void CheckThread::run()
                             //change the ct data
                             for(int k=0;k<12;k++){
                                 lightData[k].ct=ct[i]-10*j;
+                                lightData[k].bri=briChangeTime[i];
                             }
                         }
                     }
@@ -405,12 +423,21 @@ void CheckThread::run()
             }
             msleep(200);
             //open the curtain in the morning
-            if(hour==curOpenMorning&&flagOpen==0){
+            if(hour==curOpenMorning&&flagOpen1==0){
                 emit onCurtainChanged(5,2);
                 qDebug()<<"emit openHalf";
-                flagOpen=1;
+                flagOpen1=1;
             }else if (hour==curOpenMorning+1) {
-                flagOpen=0;
+                flagOpen1=0;
+            }
+            msleep(200);
+            //open the curtain in the morning
+            if(hour==curOpenAllTime&&flagOpen2==0){
+                emit onCurtainChanged(5,3);
+                qDebug()<<"emit openAll";
+                flagOpen2=1;
+            }else if (hour==curOpenAllTime+1) {
+                flagOpen2=0;
             }
 
         }
