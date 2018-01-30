@@ -173,6 +173,33 @@ void PhilipsHue::groupDraw(const int &id, const bool &draw)
     }
 }
 
+void PhilipsHue::groupColor(const int &id, const float *color)
+{
+    QJsonArray array;
+    QJsonObject objecet;
+    QJsonDocument doc;
+    array.insert(0,color[0]);
+    array.insert(1,color[1]);
+    QJsonValue value(array);
+    objecet.insert("xy",value);
+    doc.setObject(objecet);
+    jsonData=doc.toJson();
+    request.setUrl(createUrl("groups",id,"action"));
+    reply=manager->put(request,jsonData);
+}
+
+void PhilipsHue::groupStatus(const int &id, const bool &status)
+{
+    QJsonObject objecet;
+    QJsonDocument doc;
+    QByteArray jsonData;
+    request.setUrl(createUrl("groups",id,"action"));
+    objecet.insert("on",status);
+    doc.setObject(objecet);
+    jsonData=doc.toJson();
+    reply=manager->put(request,jsonData);
+}
+
 void PhilipsHue::groupCt(const int &id, const int &ct)
 {
     QJsonObject objecet;

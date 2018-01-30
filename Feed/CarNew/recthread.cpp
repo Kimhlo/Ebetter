@@ -1,6 +1,4 @@
-﻿
-
-#include "recthread.h"
+﻿#include "recthread.h"
 
 #include <QByteArray>
 #include <global.h>
@@ -17,7 +15,7 @@
 
 RecThread::RecThread(QObject *parent)
 {
-
+    foodTime=5000;
 }
 
 RecThread::~RecThread()
@@ -41,6 +39,11 @@ void RecThread::initCar()
     digitalWrite(IN1_2, HIGH);//back
     digitalWrite(IN1_3, HIGH);//forward
     digitalWrite(IN1_4, HIGH);//stop
+}
+
+void RecThread::setFoodTime(const int &time)
+{
+    foodTime=time;
 }
 
 void RecThread::run()
@@ -81,7 +84,6 @@ void RecThread::run()
 //              qDebug()<< "i= "<<i<<  test_rx[i];
            }//end for i<k
            for(int k=0;k<13;k++){
-
                if(test_rx[k]==rfid_ret[k]){
                    sum1+=1;
                }
@@ -109,12 +111,11 @@ void RecThread::run()
             if(sum2==13&&curr_status==1){//reach the first crib
                 qDebug()<<"stop1";
                 throwFood();
-                curr_status=2;
+                delay(1000);
                 forword();
-
+                curr_status=2;
                 emit UpdateSignal(0,0,100);
                 emit UpdateSignal(0,0,1);
-
                 sum1=0;
                 sum2=0;
                 sum3=0;
@@ -124,12 +125,11 @@ void RecThread::run()
                 emit UpdateSignal(0,0,2);
                 emit UpdateSignal(0,0,101);
                 qDebug()<<"stop2";
-
                 throwFood();
-                curr_status=3;
+                delay(1000);
                 back();
+                curr_status=3;
                 sendData[2]=0x02;//on the back way
-
                 sum1=0;
                 sum2=0;
                 sum3=0;
@@ -174,12 +174,10 @@ void RecThread::throwFood()
     digitalWrite(IN1_4, HIGH);
     digitalWrite(IN1_3, HIGH);
     digitalWrite(IN1_2, HIGH);
-    QThread::msleep(1000);
+    delay(1000);
     digitalWrite(IN1_1, LOW);  //throw the food
-    QThread::msleep(5000);
+    delay(foodTime);
     digitalWrite(IN1_1, HIGH);  //stop throw food
-    digitalWrite(IN1_3, LOW);  //forward
-    QThread::msleep(1000);
     sendData[1]=0x03;
 }
 

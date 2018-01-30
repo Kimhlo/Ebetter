@@ -6,7 +6,7 @@
 #include <QThread>
 
 //ds18b20
-#include <stdio.h>
+//#include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -23,25 +23,27 @@ class RecThread:public QThread
     Q_OBJECT
 
 private:
-
+   char curr_rfid[28];
+   char preRfidAll[30][28];
+   char pre_rfid[28];
+   int eatenPig;
+   bool isNew;
+   bool checkIsNew(char data[],int &k0);
+   void initGPIO();
+   float getTemper(unsigned char data[]);
+   long getWeight(unsigned char data[]);
 protected:
     void run();
 
 public:
     RecThread(QObject *parent=0);
     ~RecThread();
-private:
-    void initCar();
-
 signals:
     void UpdateSignal(int num1,int num2,int s);
 
 public slots:
     void ResetSlot();
-    void forword();
-    void back();
-    void throwFood();
-    void stop();
-
+    void getFood();
 };
+
 #endif // RECTHREAD_H

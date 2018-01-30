@@ -9,19 +9,18 @@
 int lace[5]=0;
 int curtain[5]=0;
 
-CurtainNew::CurtainNew(QObject *parent) : QObject(parent)
+CurtainNew::CurtainNew(const int &usb1, const int &usb2, QObject *parent) : QObject(parent)
 {
+
     //init the timer
     timer1=new QTimer;
     timer2=new QTimer;
     timer3=new QTimer;
     timer4=new QTimer;
     timer5=new QTimer;
+    fd_usb0=usb1;
+    fd_usb1=usb2;
 
-    if((fd_usb0 = serialOpen("/dev/ttyUSB1",9600)) < 0)
-                        qDebug()<<"open usb1 error\n";
-    if((fd_usb1 = serialOpen("/dev/ttyUSB2",9600)) < 0)
-                qDebug()<<"open usb2 error\n";
 
     connect(timer1,SIGNAL(timeout()),this,SLOT(stopOpenHalf1()));
     connect(timer2,SIGNAL(timeout()),this,SLOT(stopOpenHalf2()));
@@ -137,6 +136,17 @@ void CurtainNew::close(const int &id,const int &curtain)
         curtain1=0;
     }else if(curtain==2){
         setStatus(id,5);//关窗帘
+        curtain2=0;
+    }
+}
+
+void CurtainNew::stop(const int &id, const int &curtain)
+{
+    if(curtain==1){
+        setStatus(id,3);//停止纱帘
+        curtain1=0;
+    }else if(curtain==2){
+        setStatus(id,6);//停关窗帘
         curtain2=0;
     }
 }

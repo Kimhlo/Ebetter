@@ -21,11 +21,12 @@
 #define VOLUME 0x06
 #define SOURCE 0x07
 
-DM836II::DM836II(const int &id,QObject *parent) :
+DM836II::DM836II(const int &usb1, const int &id, QObject *parent) :
     QObject(parent)
 {
-    if((fd_usb0 = serialOpen("/dev/ttyUSB0",38400)) < 0)
-                qDebug()<<"open usb0 error\n";
+    fd_usb0=usb1;
+//    if((fd_usb0 = serialOpen("/dev/ttyUSB0",38400)) < 0)
+//                qDebug()<<"open usb0 error\n";
     data[0]=HEADER1;
     data[1]=HEADER2;
     data[2]=NUMBER;

@@ -6,7 +6,7 @@ QByteArray recData;
 hueData lightData[12];
 int mode=0;
 
-Scene::Scene(QObject *parent) :QObject(parent)
+Scene::Scene(const int &usb1, const int &usb2, QObject *parent) :QObject(parent)
 {
 
     times=0;
@@ -20,9 +20,9 @@ Scene::Scene(QObject *parent) :QObject(parent)
     //创建hue灯光指针
     hue=new PhilipsHue;
     //创建音响的指针
-    radio1=new DM836II(1);
+    radio1=new DM836II(usb1,1);
     //创建窗帘的指针
-    curtain1=new CurtainNew;
+    curtain1=new CurtainNew(usb2);
     //upd通信
     port=6000;
     udpSocket=new QUdpSocket;
@@ -47,7 +47,7 @@ Scene::Scene(QObject *parent) :QObject(parent)
             this,SLOT(openAlarm()));
     connect(timeThread,SIGNAL(onCurtainChanged(int,int)),
             this,SLOT(operateCurtain(int,int)));
-    connect(timeThread,SIGNAL(hueCtChanged()),
+    connect(timeThread,SIGNAL(hueCtHasChaged()),
             this,SLOT(updateCt()));
 
 }
@@ -97,7 +97,6 @@ void Scene::openAllCurtain()
     curtain1->open(5,2);
 }
 
-
 void Scene::openLights()
 {
     for(int i=0;i<12;i++){
@@ -124,13 +123,11 @@ void Scene::runFirstTime(const int &i)
 
     }else if (i==4) {
         //二楼次卫生间
-        qDebug()<<"updata"<<lightPerStatus[4];
         hue->groupControl(14,lightStatus[i],lightData[i].color,lightData[i].bri);
 
     }else if(i==6){
         //二楼主卫生间
         hue->groupControl(13,lightStatus[i],lightData[i].color,lightData[i].bri);
-
     }else if(i==8){
         //圆灯
         hue->groupControl(10,lightStatus[i],lightData[i].color,lightData[i].bri);
@@ -168,8 +165,7 @@ void Scene::updateScene()
     //循环两次以防信息没有接收成功
     for(int j=0;j<2;j++){
         for(int i=0;i<12;i++){
-            //set the hue light id
-
+            //set the hue light id z
             if(i==1&&lightStatus[1]==1){
                 //一楼卫生间
                 hue->groupControl(12,lightStatus[i],lightData[i].color,lightData[i].bri);
@@ -177,7 +173,7 @@ void Scene::updateScene()
             }
             if (i==4&&lightStatus[4]==1) {
                 //二楼次卫生间
-                qDebug()<<"updata"<<lightPerStatus[4];
+
                 hue->groupControl(14,lightStatus[i],lightData[i].color,lightData[i].bri);
 
             }
@@ -360,7 +356,7 @@ CheckThread::CheckThread(QObject *parent)
 void CheckThread::run()
 {
     int hour,perHour,min,perMin;
-    int briChangeTime[8]={80,60,50,50,50,50,50,120};
+    int briChangeTime[8]={80,60,50,50,50,50,50,180};
     int ct[8]={500,460,420,380,340,300,260,220};
 //    float colorHour[20]={0.640075,0.329971,//红色
 //                         0.403924,0.19988,//淡紫色
@@ -390,7 +386,7 @@ void CheckThread::run()
                         if(min==(j*15)&&perMin<min){
                             //emit the ct change signal
                             qDebug()<<"ctChanged"<<ct[i]-10*j;
-                            emit hueCtChanged();
+                            emit hueCtHasChaged();
                             //change the ct data
                             for(int k=0;k<12;k++){
                                 lightData[k].ct=ct[i]-10*j;

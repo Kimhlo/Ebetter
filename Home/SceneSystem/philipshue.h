@@ -31,6 +31,8 @@ public:
     int createGroup(const int* groupMembers);
     void groupControl(const int& id,const bool& status,const float *color,const int &bri);
     void groupDraw(const int &id,const bool &draw);
+    void groupColor(const int &id,const float *color);
+    void groupStatus(const int& id,const bool& status);
     void groupCt(const int& id,const int &ct);
     void groupBri(const int& id,const int& bri);
     void getColorXY();

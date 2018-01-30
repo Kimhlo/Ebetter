@@ -49,7 +49,7 @@ protected:
     void run();
 signals:
     void hueInfoChanged();
-    void hueCtChaged();
+    void hueCtHasChaged();
     void onAlarm();
     void onCurtainChanged(int id,int i);
 
@@ -62,7 +62,7 @@ class Scene : public QObject
 {
     Q_OBJECT
 public:
-    explicit Scene(QObject *parent = 0);
+    explicit Scene(const int &usb1, const int &usb2, QObject *parent = 0);
     void sleepMode(const bool &state);
     void setCurCloseTime(const int&time);
     void setCurOpenTime(const int&time);

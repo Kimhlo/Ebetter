@@ -90,7 +90,6 @@ void MainWindow::UpdateSlot(int num1,int num2,int s)
        ui->label_4->setText("arrive at 2");
        timer2->stop();
    }
-
 }
 
 void MainWindow::setIni()
@@ -127,18 +126,15 @@ void MainWindow::on_buttonRun_clicked()
     flag_run=1;
     sendData[0]=0x01;//运行
     sendData[1]=0x01;
-    digitalWrite(IN1_4, HIGH);
-    digitalWrite(IN1_3, LOW);
-    digitalWrite(IN1_2, HIGH);
+    myThread_1->forword();
     qDebug()<<"run";
 }
 
 //sleep
 void MainWindow::on_buttonSleep_clicked()
 {
-    digitalWrite(IN1_3, HIGH);
-    digitalWrite(IN1_4, HIGH);
-    digitalWrite(IN1_2, HIGH);
+    myThread_1->stop();
+    curr_status=0;
     flag_run=0;
     sendData[0]=0x00;//运行
     sendData[1]=0x04;
@@ -151,9 +147,7 @@ void MainWindow::on_buttonSleep_clicked()
 //forward
 void MainWindow::on_buttonForward_clicked()
 {
-    digitalWrite(IN1_4, HIGH);
-    digitalWrite(IN1_3, LOW);
-    digitalWrite(IN1_2, HIGH);
+   myThread_1->forword();
     sendData[0]=0x03;
     sendData[1]=0x01;//前进
     qDebug()<<"forward";
@@ -161,9 +155,7 @@ void MainWindow::on_buttonForward_clicked()
 //back
 void MainWindow::on_buttonBack_clicked()
 {
-    digitalWrite(IN1_3, HIGH);
-    digitalWrite(IN1_2, LOW);
-    digitalWrite(IN1_4, HIGH);
+    myThread_1->back();
     sendData[0]=0x03;
     sendData[1]=0x02;//返回
     qDebug()<<"back";
@@ -171,19 +163,7 @@ void MainWindow::on_buttonBack_clicked()
 //throw the food
 void MainWindow::on_buttonThrow_clicked()
 {
-    //stop the car
-    digitalWrite(IN1_4, HIGH);
-    digitalWrite(IN1_3, HIGH);
-    digitalWrite(IN1_2, HIGH);
-    delay(1000);
-    //throw the food
-    digitalWrite(IN1_1, LOW);
-    delay(5000);
-    //stop throw food
-    digitalWrite(IN1_1, HIGH);
-     //forward
-    digitalWrite(IN1_3, LOW);
-    delay(1000);
+    myThread_1->throwFood();
     sendData[0]=0x03;
     sendData[1]=0x03;//投食
     qDebug()<<"throw food";
@@ -191,9 +171,7 @@ void MainWindow::on_buttonThrow_clicked()
 //stop
 void MainWindow::on_buttonStop_clicked()
 {
-    digitalWrite(IN1_3, HIGH);
-    digitalWrite(IN1_4, HIGH);
-    digitalWrite(IN1_2, HIGH);
+    myThread_1->stop();
     sendData[0]=0x03;
     sendData[1]=0x04;//停止
     qDebug()<<"stop";

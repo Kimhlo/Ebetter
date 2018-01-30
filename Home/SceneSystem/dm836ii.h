@@ -11,7 +11,7 @@ class DM836II : public QObject
     Q_OBJECT
 public:
 
-    explicit DM836II(const int &channel,QObject *parent = 0);
+    explicit DM836II(const int &usb1,const int &id,QObject *parent = 0);
     //set the voice high or low
     void setVolume(const int&vol);
     int nowVolume();
