@@ -6,7 +6,7 @@ QByteArray recData;
 hueData lightData[12];
 int mode=0;
 
-Scene::Scene(const int &usb1, const int &usb2, QObject *parent) :QObject(parent)
+Scene::Scene(const int &usb1, const int &usb2,const int &port, QObject *parent) :QObject(parent)
 {
 
     times=0;
@@ -22,33 +22,42 @@ Scene::Scene(const int &usb1, const int &usb2, QObject *parent) :QObject(parent)
     //创建音响的指针
     radio1=new DM836II(usb1,1);
     //创建窗帘的指针
-    curtain1=new CurtainNew(usb2);
+    curtain1=new Curtain(usb2);
     //upd通信
     port=6000;
     udpSocket=new QUdpSocket;
     bool bindPort;
     bindPort=udpSocket->bind(port,QUdpSocket::ShareAddress);
     if(bindPort==false){
-        qDebug()<<"bind port:5009 error";
+        qDebug()<<"bind port:6000 error";
         return;
     }
     //窗帘通信
     curtainSocket=new QUdpSocket;
+
+    curtainSocket->bind(port);
     //创建timeThread
     timeThread=new CheckThread(this);
     timeThread->start();
 
     //connct the signals and slots
-    connect(udpSocket,SIGNAL(readyRead()),
+    connect(udpSocket,SIGNAL(readyRead()),//控制飞利浦的灯
             this,SLOT(udpRecData()));
-    connect(timeThread,SIGNAL(hueInfoChanged()),
+
+    connect(timeThread,SIGNAL(hueInfoChanged()),//灯光颜色改变
             this,SLOT(updateScene()));
-    connect(timeThread,SIGNAL(onAlarm()),
+
+    connect(timeThread,SIGNAL(onAlarm()),//打开闹钟
             this,SLOT(openAlarm()));
-    connect(timeThread,SIGNAL(onCurtainChanged(int,int)),
+
+    connect(timeThread,SIGNAL(onCurtainChanged(int,int)),//操作窗帘
             this,SLOT(operateCurtain(int,int)));
-    connect(timeThread,SIGNAL(hueCtHasChaged()),
+
+    connect(timeThread,SIGNAL(hueCtHasChaged()),//灯光色温亮度改变
             this,SLOT(updateCt()));
+
+    connect(curtainSocket,SIGNAL(readyRead()),//大门控制窗帘打开
+            this,SLOT(udpCurtainOperate()));
 
 }
 
@@ -222,7 +231,7 @@ void Scene::operateCurtain(int id,int i)
         }
     }else if(i==2){
         qDebug()<<"inOpenHalf";
-        curtain1->openHalf(id,2);//openHlaf
+        curtain1->setPostion(id,1,70);//openHlaf
     }else if(i==3){
         openAllCurtain();
     }
@@ -266,6 +275,20 @@ void Scene::updateCt()
             }
         }
 
+    }
+
+}
+
+void Scene::udpCurtainOperate()
+{
+    QByteArray dataArr;
+    while (curtainSocket->hasPendingDatagrams()) {
+        dataArr.resize(curtainSocket->pendingDatagramSize());
+        curtainSocket->readDatagram(dataArr.data(),dataArr.size());
+    }
+    qDebug()<<"curtain receive data="<<dataArr.at(0);
+    if(dataArr.at(0)==0x01){
+        curtain1->inTimeOpenAndClose(2,50000);
     }
 
 }

@@ -246,10 +246,15 @@ void RecThread::run()
                 inputIO[65]=1;
                 inputIO[66]=1;
             }
-            if((inputIO.value(72) || inputIO.value(73) )>0)
+            if((inputIO.value(71) || inputIO.value(72) )>0)
             {
+                inputIO[71]=1;
                 inputIO[72]=1;
+            }
+            if((inputIO.value(73) || inputIO.value(80) )>0)
+            {
                 inputIO[73]=1;
+                inputIO[80]=1;
             }
             if((inputIO.value(75) || inputIO.value(76) )>0)
             {
@@ -343,7 +348,7 @@ void RecThread::run()
             }
             //==============================
 
-            for(i=1;i<120;i++) //sensor input range :61~91  light: 41~59
+            for(i=1;i<121;i++) //sensor input range :61~91  light: 41~59
             {
                 io_light=0;
                 QList<int> vals;
@@ -410,7 +415,7 @@ void RecThread::run()
                 //=================================
               //  qDebug()<<"flag_switch_delay_light="<<io_light<<flag_switch_delay_light[io_light];
                 //传感器控制
-                if(((i>60) && (i<92)) || (i==120) || (i==16) || (i==51) || (i==28) || (i==35)  )
+                if(((i>60) && (i<92)) || (i==16) || (i==51) || (i==28) || (i==35)  )
                 {
                     if((pre_light_status_sensor.value(io_light) ^ light_status_sensor.value(io_light))==1 ) //传感器状态翻转
                  {
@@ -427,7 +432,7 @@ void RecThread::run()
                             cnt_sensor_delay_light[io_light]=0;
                             flag_sensor_delay_light[io_light]=0x01;
                             light_status[io_light]=1;       //置亮的状态
-                            qDebug()<<"sensor delay start ="<<io_light;
+                          //  qDebug()<<"sensor delay start ="<<io_light;
                         }
                     }
 
@@ -435,7 +440,7 @@ void RecThread::run()
                     {
                         cnt_sensor_delay_light[io_light]=0;
                         flag_sensor_delay_light[io_light]=0x00;
-                        qDebug()<<"传感器被开关屏蔽" <<io_light ;
+                      //  qDebug()<<"传感器被开关屏蔽" <<io_light ;
                     }
                  }
 
@@ -455,12 +460,12 @@ void RecThread::run()
                           light_status[io_light]=1;       //置亮的状态
                       else
                           light_status[io_light]=0;       //置灭的状态
-                      qDebug()<<"sensor delay end"<<io_light<<cnt_sensor_delay_light[io_light];
+                     // qDebug()<<"sensor delay end"<<io_light<<cnt_sensor_delay_light[io_light];
                  }
                 }
                 //=================================
                 //开关控制  优先级最高
-                if(((i<61) || (i>91)) && (i!=120) || (i!=16) || (i!=51) || (i!=28) || (i!=35)  )
+                if(((i<61) || (i>91)) && (i!=16) && (i!=51) && (i!=28) && (i!=35) )
                 {
                 //传感器控制的灯当开关由开变关时，传感器需要延时生效
                 if((pre_light_status_switch.value(io_light) ^ light_status_switch.value(io_light))==1)
@@ -524,13 +529,13 @@ void RecThread::run()
             io_55=light_status.value(55);
             io_54=light_status.value(54);
 
-            io_1=(tx1[0]) & 0x01;  //1
-            io_7= (tx1[0]>>6) & 0x01 ;  //7
-            io_15=(tx1[1]>>6) & 0x01; //15
+            io_1=light_status_switch.value(1) ;//(tx1[0]) & 0x01;  //1
+            io_7=light_status_switch.value(7);// (tx1[0]>>6) & 0x01 ;  //7
+            io_15=light_status_switch.value(15);(tx1[1]>>6) & 0x01; //15
 
-            io_28=(tx0[0]>>7) & 0x01; //28
-            io_30=(tx0[1]>>1) & 0x01; //30
-//qDebug()<<"io_30="<<io_30;
+            io_28=light_status_switch.value(28);  //;(tx0[0]>>7) & 0x01; //28
+            io_30=light_status_switch.value(30);//(tx0[1]>>1) & 0x01; //30
+//qDebug()<<"io_1="<<io_1;
 
             //灯带的状态发生了变化，发信号给菲利浦的控制器
 
