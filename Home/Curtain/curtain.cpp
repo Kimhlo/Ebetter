@@ -128,7 +128,7 @@ void Curtain::inTimeOpenAndClose(const int &id, const int &time)
 
 }
 
-void Curtain::setID(const int &id)
+void Curtain::  setID(const int &id)
 {
     sendData[1]=0xFF;
     sendData[2]=0xAA;//CMD:设置模式

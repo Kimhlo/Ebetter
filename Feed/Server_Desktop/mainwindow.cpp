@@ -29,6 +29,7 @@ MainWindow::MainWindow(QWidget *parent) :
         qDebug()<<"bind port:5000 error";
         return;
     }
+    this->ui->label_carStatus->setText("正在待机中：待机");
 
     //app数据
     udpSocket_6000->setReadBufferSize(512);
@@ -75,23 +76,31 @@ MainWindow::~MainWindow()
 float MainWindow::getTemper(unsigned char data[])
 {
     float temper=0.0;
-    temper= (data[28]*256+data[29])/10.0;
+    int temp= (data[29]*256+data[30]);
+    temper=temp/10.0;
     qDebug()<<"temper="<<temper;
     return temper;
 }
 
 float MainWindow::getWeight(unsigned char data[])
 {
-    float nuitKg=2345.0;
-    long beginWeight=12345;
-    long weightNumber=0;
+    float nuitKg=29376.0;
+    unsigned long beginWeight=4294399467;
+    unsigned long weightNumber=0;
     float weight=0.0;
     long temp1=long (data[31])<<24;
     long temp2=long (data[32])<<16;
     long temp3=long (data[33])<<8;
     long temp4=long (data[34]);
     weightNumber=temp1|temp2|temp3|temp4;//得到传上来的数据
-    weight=(weightNumber-beginWeight)/nuitKg;
+    if(weightNumber<=1000){
+        weightNumber=4294399467;
+    }
+    weight=(4294399467-weightNumber);
+    weight=weight/29376.0;
+    if(weight<=3.0){
+        weight=0.0;
+    }
     qDebug()<<"weight="<<weight;
     return weight;
 }
@@ -151,10 +160,14 @@ void MainWindow::udp_rec_5000()
         temper=getTemper(data);
         weight=getWeight(data);
 
-        ui->label_pig_temp->setText(QString::number(temper));
-        ui->label_weight->setText(QString::number(weight));
+        ui->label_pig_temp->setText(QString::number(temper)+"℃");
+        ui->label_weight->setText(QString::number(weight)+"Kg");
         ui->label_rfid->setText(this->ui->label_21->text().mid(0,54));
 
+        if(arr[36]==0x03)
+        {
+            ui->listWidget->addItem(new QListWidgetItem(QString("【" + ui->label_rfid->text() + "】 投食完毕！")));
+        }
         if(arr[36]==1)
         {
             ui->listWidget->addItem(new QListWidgetItem(QString("【" + ui->label_rfid->text() + "】 已吃完！")));

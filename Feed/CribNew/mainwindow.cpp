@@ -19,6 +19,7 @@
 #include<QTableWidgetItem>
 #include<QHeaderView>
 
+
 namespace MyNamespace {
 QString baseListPath="/home/pi/music/music.list";
 QString baseFilePath="/home/pi/music/mp3/";
@@ -29,10 +30,16 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
+
     ui->setupUi(this);
     MyNamespace::musicProcess.start("mplayer -slave -quiet -playlist music.list " );
     MyNamespace::musicProcess.write( "loadfile LiBai.mp3\n");
     readIni();
+
+    //音乐播放器创建
+    player=new QMediaPlayer;
+    playList=new QMediaPlaylist;
+
     //built the udp
     udpSocket = new QUdpSocket(this);
 

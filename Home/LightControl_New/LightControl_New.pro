@@ -1,16 +1,14 @@
 #-------------------------------------------------
 #
-# Project created by QtCreator 2018-01-30T23:45:17
+# Project created by QtCreator 2018-02-03T22:12:57
 #
 #-------------------------------------------------
 
 QT       += core gui
 QT       += network
-QT       +=multimedia
-
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = CribNew
+TARGET = LightControl_New
 TEMPLATE = app
 
 # The following define makes your compiler emit warnings if you use
@@ -39,7 +37,7 @@ HEADERS += \
 FORMS += \
         mainwindow.ui
 
-LIBS  += -lwiringPi
+LIBS +=-lwiringPi
 
 DISTFILES += \
     README.md

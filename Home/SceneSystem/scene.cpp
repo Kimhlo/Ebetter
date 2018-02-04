@@ -1,3 +1,29 @@
+/****************************************************
+ *......................我佛慈悲.....................
+ *                       _oo0oo_
+ *                      o8888888o
+ *                      88" . "88
+ *                      (| -_- |)
+ *                      0\  =  /0
+ *                    ___/`---'\___
+ *                  .' \\|     |// '.
+ *                 / \\|||  :  |||// \
+ *                / _||||| -卍-|||||- \
+ *               |   | \\\  -  /// |   |
+ *               | \_|  ''\---/''  |_/ |
+ *               \  .-\__  '-'  ___/-. /
+ *             ___'. .'  /--.--\  `. .'___
+ *          ."" '<  `.___\_<|>_/___.' >' "".
+ *         | | :  `- \`.;`\ _ /`;.`/ - ` : | |
+ *         \  \ `_.   \_ __\ /__ _/   .-` /  /
+ *     =====`-.____`.___ \_____/___.-`___.-'=====
+ *                       `=---='
+ *
+ *..................佛祖开光 ,永无BUG.................
+ *场景部分：
+ * 1.主要用于与底层硬件传感器触发的联动；
+ * 2.不同模式的设置；
+*****************************************************/
 #include "scene.h"
 #include <QDebug>
 #include <philipshue.h>
@@ -5,7 +31,8 @@
 QByteArray recData;
 hueData lightData[12];
 int mode=0;
-
+int briNow=250;
+int doorStates[8];
 Scene::Scene(const int &usb1, const int &usb2, QObject *parent) :QObject(parent)
 {
 
@@ -13,8 +40,8 @@ Scene::Scene(const int &usb1, const int &usb2, QObject *parent) :QObject(parent)
     //init the hue struct
     for(int i=0;i<12;i++){
         lightData[i].bri=180;
-        lightData[i].color[0]=0.510352;
-        lightData[i].color[1]=0.432974;
+        lightData[i].color[0]=0.396154; //white黄色0.396154 0.412773
+        lightData[i].color[1]=0.452974;
         lightPerStatus[i]=0;
     }
     //创建hue灯光指针
@@ -34,10 +61,13 @@ Scene::Scene(const int &usb1, const int &usb2, QObject *parent) :QObject(parent)
     }
     //窗帘通信
     curtainSocket=new QUdpSocket;
+    curtainPort=6666;
+    curtainSocket->bind(curtainPort);
     //创建timeThread
     timeThread=new CheckThread(this);
     timeThread->start();
-
+    //窗帘定时器
+    curtainTimer=new QTimer;
     //connct the signals and slots
     connect(udpSocket,SIGNAL(readyRead()),
             this,SLOT(udpRecData()));
@@ -49,6 +79,8 @@ Scene::Scene(const int &usb1, const int &usb2, QObject *parent) :QObject(parent)
             this,SLOT(operateCurtain(int,int)));
     connect(timeThread,SIGNAL(hueCtHasChaged()),
             this,SLOT(updateCt()));
+    connect(curtainTimer,SIGNAL(timeout()),
+            this,SLOT(curtainTimeOut()));
 
 }
 
@@ -96,6 +128,7 @@ void Scene::openAllCurtain()
     curtain1->open(5,1);
     curtain1->open(5,2);
 }
+
 
 void Scene::openLights()
 {
@@ -154,10 +187,19 @@ void Scene::udpRecData()
         udpSocket->readDatagram(recData.data(),recData.size());
     }
     times+=1;
-//    qDebug()<<"getData"<<recData.toHex();
 
+    //according the door status to change the light status
+    if(recData[12]==0x00){
+
+        recData[1]=0x01;
+    }
+    if(recData[13]==0x00){
+        recData[4]=0x01;
+    }
+    if(recData[14]==0x00){
+        recData[6]=0x01;
+    }
     openLights();
-
 }
 
 void Scene::updateScene()
@@ -169,23 +211,18 @@ void Scene::updateScene()
             if(i==1&&lightStatus[1]==1){
                 //一楼卫生间
                 hue->groupControl(12,lightStatus[i],lightData[i].color,lightData[i].bri);
-
             }
             if (i==4&&lightStatus[4]==1) {
                 //二楼次卫生间
-
                 hue->groupControl(14,lightStatus[i],lightData[i].color,lightData[i].bri);
-
             }
             if(i==6&&lightStatus[6]==1){
                 //二楼主卫生间
                 hue->groupControl(13,lightStatus[i],lightData[i].color,lightData[i].bri);
-
             }
             if(i==8&&lightStatus[8]==1){
                 //圆灯
                 hue->groupControl(10,lightStatus[i],lightData[i].color,lightData[i].bri);
-
             }
             if(i==11&&lightStatus[11]==1){
                 //西厨
@@ -194,7 +231,6 @@ void Scene::updateScene()
                 hue->lightsStatus(22,lightStatus[i]);
                 hue->lightsStatus(23,lightStatus[i]);
                 hue->lightsStatus(38,lightStatus[i]);
-
             }
             if(lightStatus[i]==1){
                 hue->lightsStatus(id[i],lightStatus[i]);
@@ -270,9 +306,59 @@ void Scene::updateCt()
 
 }
 
+void Scene::curtainAndDoor()
+{
+    int hour=QDateTime::currentDateTime().toString("hh").toInt();
+
+    QByteArray recData;
+    while (curtainSocket->hasPendingDatagrams()) {
+        recData.resize(curtainSocket->pendingDatagramSize());
+        curtainSocket->readDatagram(recData.data(),recData.size());
+    }
+    curtainStatus=curtain1->checkStatus(2);
+    if(recData[0]==0&&curtainStatus==1){//门打开且窗帘关闭
+        curtain1->openHalf(2,2);//窗帘和纱帘都开一半
+        curtainTimer->start(120000);//两分钟后关闭
+    }
+}
+
+void Scene::curtainTimeOut()
+{
+    curtainTimer->stop();
+    if(curtainStatus==1){//关闭大厅窗帘
+        curtain1->close(2,1);
+        curtain1->close(2,2);
+    }
+
+}
+
 void Scene::setStatus(const int &i)
 {
     int hour=QDateTime::currentDateTime().toString("hh").toInt();
+    //first floor WC
+    if((hour>=22||hour<=7)&&recData[12]==1){//first floor
+        lightData[1].bri=170;
+    }else if(hour>7&&hour<22&&recData[12]==1){
+        lightData[1].bri=250;
+    }else if(recData[12]==0){
+        lightData[1].bri=briNow;
+    }
+    //second WC in second floor
+    if((hour>=22||hour<=7)&&recData[13]==1){//sconed floor wc
+        lightData[4].bri=170;
+    }else if(hour>7&&hour<22&&recData[13]==1){
+        lightData[4].bri=250;
+    }else if(recData[13]==0){
+        lightData[4].bri=briNow;
+    }
+    //main WC in second floor
+    if((hour>=22||hour<=7)&&recData[14]==1){//sconed floor main wc
+        lightData[6].bri=170;
+    }else if(hour>7&&hour<22&&recData[13]==1){
+        lightData[6].bri=250;
+    }else if(recData[13]==0){
+        lightData[6].bri=briNow;
+    }
 
     if(i==1&&lightPerStatus[1]!=lightStatus[1]){
         //一楼卫生间
@@ -356,7 +442,8 @@ CheckThread::CheckThread(QObject *parent)
 void CheckThread::run()
 {
     int hour,perHour,min,perMin;
-    int briChangeTime[8]={80,60,50,50,50,50,50,180};
+    perMin=0;
+    int briChangeTime[8]={80,60,50,50,50,50,50,250};
     int ct[8]={500,460,420,380,340,300,260,220};
 //    float colorHour[20]={0.640075,0.329971,//红色
 //                         0.403924,0.19988,//淡紫色
@@ -382,7 +469,9 @@ void CheckThread::run()
             for(int i=0;i<8;i++){//check the hour
                 if(hour==ctChangeTime[i]){
                     for(int j=0;j<4;j++){//check the min
-                        if(perMin==59) perMin=-1;
+                        if(perMin==59) {
+                            perMin=-1;
+                        }
                         if(min==(j*15)&&perMin<min){
                             //emit the ct change signal
                             qDebug()<<"ctChanged"<<ct[i]-10*j;
@@ -391,6 +480,7 @@ void CheckThread::run()
                             for(int k=0;k<12;k++){
                                 lightData[k].ct=ct[i]-10*j;
                                 lightData[k].bri=briChangeTime[i];
+                                briNow=briChangeTime[i];
                             }
                         }
                     }
@@ -398,14 +488,14 @@ void CheckThread::run()
             }
             perMin=min;
             perHour=hour;
-
             msleep(100);
             //set the alarm
-            if(hour==alarmOpenTime&&flagAlarm==0){
+//            int min=QDateTime::currentDateTime().toString("mm").toInt();
+            if(hour==curOpenMorning&&flagAlarm==0){
                 emit onAlarm();//emit the alarm that is time to get up
                 qDebug()<<"emit onalarm";
                 flagAlarm+=1;
-            }else if(hour==(alarmOpenTime+1)){
+            }else if(hour==(curOpenMorning+1)){
                 flagAlarm=0;
             }
             msleep(200);

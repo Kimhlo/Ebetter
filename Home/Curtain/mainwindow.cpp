@@ -15,7 +15,6 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     delete ui;
-    //说明，由于中水箱的水有味道，现在不将处理后的水送入中水箱，而是直接排掉
 }
 
 void MainWindow::on_pushButton_clicked()

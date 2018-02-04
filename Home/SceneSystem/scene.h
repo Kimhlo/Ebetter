@@ -27,7 +27,8 @@ struct hueData
 extern hueData lightData[12];
 extern QByteArray recData;
 extern int mode;
-
+extern int briNow;
+extern int doorStates[8];
 /*****************************************
  * 时间检查线程的定义
 ******************************************/
@@ -91,6 +92,8 @@ private:
     void openLights();
     //the curtain
     CurtainNew *curtain1;
+    QTimer *curtainTimer;
+    int curtainStatus;
     //the music
     DM836II *radio1;
 signals:
@@ -101,6 +104,8 @@ public slots:
     void openAlarm();
     void operateCurtain(int id,int i);
     void updateCt();
+    void curtainAndDoor();
+    void curtainTimeOut();
 };
 
 #endif // SCENE_H

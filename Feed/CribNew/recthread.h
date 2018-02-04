@@ -32,6 +32,7 @@ private:
    void initGPIO();
    float getTemper(unsigned char data[]);
    long getWeight(unsigned char data[]);
+   QProcess *proc;
 protected:
     void run();
 

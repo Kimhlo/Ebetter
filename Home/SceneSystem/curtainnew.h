@@ -10,7 +10,8 @@ class CurtainNew : public QObject
 {
     Q_OBJECT
 public:
-    explicit CurtainNew(const int &usb1,const int &usb2=0,QObject *parent = 0);
+    explicit CurtainNew(const int &usb1, QObject *parent = 0);
+    int checkStatus(const int &id);
     void openHalf(const int &id,const int &curtain);
     void open(const int &id, const int &curtain);
     void close(const int &id, const int &curtain);

@@ -7,6 +7,7 @@
 #include "wiringSerial.h"
 #include <QDebug>
 #include <sys/stat.h>
+#include <QProcess>
 
 #define  IN1 29
 #define  IN2 28
@@ -15,7 +16,8 @@
 
 RecThread::RecThread(QObject *parent)
 {
-
+    proc=new QProcess;
+    proc->start("sudo ./start.sh");//启动服务
 }
 
 RecThread::~RecThread()
@@ -136,10 +138,10 @@ void RecThread::run()
     if((fd_usb0 = serialOpen("/dev/ttyUSB0",9600)) < 0)//RFID
          qDebug()<<"open usb0 error\n";
 
-    if((fd_usb1 = serialOpen("/dev/ttyUSB1",9600)) < 0)//temperature
+    if((fd_usb1 = serialOpen("/dev/ttyUSB2",9600)) < 0)//temperature
          qDebug()<<"open usb1 error\n";
 
-    if((fd_usb2 = serialOpen("/dev/ttyUSB2",9600)) < 0)//weight
+    if((fd_usb2 = serialOpen("/dev/ttyUSB1",9600)) < 0)//weight
          qDebug()<<"open usb2 error\n";
 
     //temperature order format
@@ -178,8 +180,6 @@ void RecThread::run()
     {
 
         inLevel=digitalRead(0);//食槽是否还有食物
-
-
         //DS18B20
         float temp;
         int i, j;
@@ -200,14 +200,11 @@ void RecThread::run()
 //        temp = (float)atoi(tempBuf) / 1000;  //将字符串转换为浮点型温度数据
 //        printf("%.3f C\n",temp);             //打印出温度值
         QThread::msleep(2000);
-
         //RFID收到数据
         k0=serialDataAvail (fd_usb0);
         qDebug()<<"RFID="<<k0;
-        //有客官来了，翠花上酸菜
        if(k0>26)
         {
-           qDebug()<<"有客官来了，翠花上酸菜";
             for(i=0;i<k0;i++)
             {
                rx_rfid[i]=serialGetchar(fd_usb0);
@@ -218,7 +215,6 @@ void RecThread::run()
                 curr_rfid[i]=rx_rfid[i];
                 qDebug()<<"current="<<int(curr_rfid[i]);
             }
-
             //检测二维数组中是否有已经存在的RFID
             for(int num=0;num<eatenPig+1;num++){
                 for(int m=0;m<27;m++){
@@ -230,7 +226,6 @@ void RecThread::run()
                 }
             }//end for number
 
-
             qDebug()<<"numberOld="<<numberOld;
             if(numberOld>=1){
                 isNew=false;
@@ -240,7 +235,6 @@ void RecThread::run()
             numberOld=0;
         }
 
-        //给新的猪哥哥做个全身检查
         if(isNew && k0>26)
         {
             /*************************
@@ -249,10 +243,8 @@ void RecThread::run()
             qDebug()<<"新的风暴已经来临";
             for(i=0;i<27;i++){
                 preRfidAll[eatenPig][i]=curr_rfid[i];
-//                qDebug()<<"per"<<int(pre_rfid[i]);
                 recData[i]=curr_rfid[i];
             }
-//            emit UpdateSignal(0,0,1);
             /*************************
              * usb1用于红外检测
             **************************/
@@ -268,7 +260,6 @@ void RecThread::run()
                 qDebug()<<"temper"<<i<<"="<< rx_temp[i];
             }
             getTemper(rx_temp);
-            //把猪哥哥的温柔告诉其他人
             for(i=0;i<4;i++){
                 recData[i+27]=rx_temp[i+2];
             }
@@ -291,23 +282,22 @@ void RecThread::run()
             for(i=0;i<4;i++){
                 recData[i+31]=rx_weight[i+3];
             }
-            //开始给猪哥哥上菜hui'kui
+            //投食
             getFood();
-            //当前的碗里給猪哥哥饭了么？
-            recData[36]=inLevel;
-            //你的数据我要告诉所有人
+            recData[36]=0x03;
+            eatFinish=0;
             emit UpdateSignal(0,0,1);
-            //新增一只吃过的猪哥哥
             eatenPig+=1;
 
+            delay(2000);
         }//读取新猪的数据结束
         if(inLevel==1&&eatFinish==0){
-          recData[36]=1;//吃完
+          recData[36]=0x01;//投食
           eatFinish=1;
           qDebug()<<"劳资整完了饭";
           emit UpdateSignal(0,0,1); //显示收到的数据
         }else if(inLevel==0&&eatFinish==1){
-            recData[36]=0;
+            recData[36]=0x02;
             eatFinish=0;
             qDebug()<<"人家还没吃完";
           }//end if inLevel

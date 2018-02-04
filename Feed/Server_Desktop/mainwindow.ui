@@ -108,7 +108,7 @@ text-decoration: underline;</string>
      <string notr="true">font: 75 16pt &quot;Agency FB&quot;;</string>
     </property>
     <property name="text">
-     <string>RFID:</string>
+     <string>猪的身份ID：</string>
     </property>
    </widget>
    <widget class="QLabel" name="label_carStatus">
@@ -419,7 +419,7 @@ text-decoration: underline;</string>
      <rect>
       <x>850</x>
       <y>380</y>
-      <width>61</width>
+      <width>77</width>
       <height>80</height>
      </rect>
     </property>
