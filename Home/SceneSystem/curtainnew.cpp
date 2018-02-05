@@ -167,10 +167,10 @@ void CurtainNew::open(const int &id,const int &curtain)
 {
     if(curtain==1){
         setStatus(id,1);//开纱帘
-        curtain1=1;
+
     }else if(curtain==2){
         setStatus(id,4);//开窗帘
-        curtain2=1;
+
     }
 }
 
@@ -181,10 +181,10 @@ void CurtainNew::close(const int &id,const int &curtain)
 {
     if(curtain==1){
         setStatus(id,2);//关纱帘
-        curtain1=0;
+
     }else if(curtain==2){
         setStatus(id,5);//关窗帘
-        curtain2=0;
+
     }
 }
 
@@ -192,10 +192,10 @@ void CurtainNew::stop(const int &id, const int &curtain)
 {
     if(curtain==1){
         setStatus(id,3);//停止纱帘
-        curtain1=0;
+
     }else if(curtain==2){
         setStatus(id,6);//停关窗帘
-        curtain2=0;
+
     }
 }
 

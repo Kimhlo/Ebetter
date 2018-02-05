@@ -31,8 +31,8 @@
 QByteArray recData;
 hueData lightData[12];
 int mode=0;
-int briNow=250;
-int doorStates[8];
+int briNow=100;
+int doorStates=0;
 Scene::Scene(const int &usb1, const int &usb2, QObject *parent) :QObject(parent)
 {
 
@@ -42,6 +42,7 @@ Scene::Scene(const int &usb1, const int &usb2, QObject *parent) :QObject(parent)
         lightData[i].bri=180;
         lightData[i].color[0]=0.396154; //white黄色0.396154 0.412773
         lightData[i].color[1]=0.452974;
+        lightData[i].ct=300;
         lightPerStatus[i]=0;
     }
     //创建hue灯光指针
@@ -60,14 +61,13 @@ Scene::Scene(const int &usb1, const int &usb2, QObject *parent) :QObject(parent)
         return;
     }
     //窗帘通信
-    curtainSocket=new QUdpSocket;
-    curtainPort=6666;
-    curtainSocket->bind(curtainPort);
+//    curtainSocket=new QUdpSocket;
+//    curtainPort=6666;
+//    curtainSocket->bind(curtainPort);
     //创建timeThread
     timeThread=new CheckThread(this);
     timeThread->start();
-    //窗帘定时器
-    curtainTimer=new QTimer;
+
     //connct the signals and slots
     connect(udpSocket,SIGNAL(readyRead()),
             this,SLOT(udpRecData()));
@@ -79,8 +79,7 @@ Scene::Scene(const int &usb1, const int &usb2, QObject *parent) :QObject(parent)
             this,SLOT(operateCurtain(int,int)));
     connect(timeThread,SIGNAL(hueCtHasChaged()),
             this,SLOT(updateCt()));
-    connect(curtainTimer,SIGNAL(timeout()),
-            this,SLOT(curtainTimeOut()));
+
 
 }
 
@@ -129,7 +128,6 @@ void Scene::openAllCurtain()
     curtain1->open(5,2);
 }
 
-
 void Scene::openLights()
 {
     for(int i=0;i<12;i++){
@@ -138,7 +136,6 @@ void Scene::openLights()
         }else if(recData.at(i)==0x00){
             lightStatus[i]=0;
         }
-
         if(times==1){
             runFirstTime(i);
         }else{
@@ -146,6 +143,10 @@ void Scene::openLights()
         }
         lightPerStatus[i]=lightStatus[i];
     }
+
+    doorPreStatus[0]=int(recData[12]);
+    doorPreStatus[1]=int(recData[13]);
+    doorPreStatus[2]=int(recData[14]);
 }
 
 void Scene::runFirstTime(const int &i)
@@ -167,16 +168,10 @@ void Scene::runFirstTime(const int &i)
 
     }else if(i==11){
         //西厨
-        hue->lightsStatus(id[i],lightStatus[i]);
-        hue->lightsStatus(21,lightStatus[i]);
-        hue->lightsStatus(22,lightStatus[i]);
-        hue->lightsStatus(23,lightStatus[i]);
-        hue->lightsStatus(38,lightStatus[i]);
-
+        hue->lightsCt(38,lightStatus[i],lightData[i].bri);
+        hue->groupStatus(11,lightStatus[i]);
     }else{
-        hue->lightsStatus(id[i],lightStatus[i]);
-        hue->lightsBri(id[i],lightData[i].bri);
-        hue->lightsColor(id[i],lightData[i].color) ;
+        hue->lightsCt(id[i],lightStatus[i],lightData[i].bri);
     }
 }
 
@@ -210,32 +205,27 @@ void Scene::updateScene()
             //set the hue light id z
             if(i==1&&lightStatus[1]==1){
                 //一楼卫生间
-                hue->groupControl(12,lightStatus[i],lightData[i].color,lightData[i].bri);
+                hue->groupControl(12,lightStatus[i],lightData[i].ct,lightData[i].bri);
             }
             if (i==4&&lightStatus[4]==1) {
                 //二楼次卫生间
-                hue->groupControl(14,lightStatus[i],lightData[i].color,lightData[i].bri);
+                hue->groupControl(14,lightStatus[i],lightData[i].ct,lightData[i].bri);
             }
             if(i==6&&lightStatus[6]==1){
                 //二楼主卫生间
-                hue->groupControl(13,lightStatus[i],lightData[i].color,lightData[i].bri);
+                hue->groupControl(13,lightStatus[i],lightData[i].ct,lightData[i].bri);
             }
             if(i==8&&lightStatus[8]==1){
                 //圆灯
-                hue->groupControl(10,lightStatus[i],lightData[i].color,lightData[i].bri);
+                hue->groupControl(10,lightStatus[i],lightData[i].ct,lightData[i].bri);
             }
             if(i==11&&lightStatus[11]==1){
                 //西厨
-                hue->lightsStatus(id[i],lightStatus[i]);
-                hue->lightsStatus(21,lightStatus[i]);
-                hue->lightsStatus(22,lightStatus[i]);
-                hue->lightsStatus(23,lightStatus[i]);
-                hue->lightsStatus(38,lightStatus[i]);
+                hue->lightsCt(38,lightStatus[i],lightData[i].ct,lightData[i].bri);
+                hue->groupControl(11,lightStatus[i],lightData[i].ct,lightData[i].bri);
             }
             if(lightStatus[i]==1){
-                hue->lightsStatus(id[i],lightStatus[i]);
-                hue->lightsBri(id[i],lightData[i].bri);
-                hue->lightsColor(id[i],lightData[i].color) ;
+                hue->lightsCt(id[i],lightStatus[i],lightData[i].ct,lightData[i].bri);
             }
         }
     }
@@ -267,166 +257,101 @@ void Scene::operateCurtain(int id,int i)
 
 void Scene::updateCt()
 {
-    for(int k=0;k<3;k++){
+    for(int k=0;k<2;k++){
         for(int i=0;i<12;i++){
             //set the hue light id
             if(i==1&&lightStatus[1]==1){
                 //一楼卫生间
-                hue->groupBri(12,lightData[i].bri);
-                hue->groupCt(12,lightData[i].ct);
+                hue->groupCt(12,lightData[i].ct,lightData[i].bri);
             }
             if (i==4&&lightStatus[4]==1) {
                 //二楼次卫生间
-                hue->groupBri(14,lightData[i].bri);
-                hue->groupCt(14,lightData[i].ct);
+                hue->groupCt(14,lightData[i].ct,lightData[i].bri);
             }
             if(i==6&&lightStatus[6]==1){
                 //二楼主卫生间
-                hue->groupBri(13,lightData[i].bri);
-                hue->groupCt(13,lightData[i].ct);
+                hue->groupCt(13,lightData[i].ct,lightData[i].bri);
             }
             if(i==8&&lightStatus[8]==1){
                 //圆灯
-                hue->groupBri(10,lightData[i].bri);
-                hue->groupCt(10,lightData[i].ct);
+                hue->groupCt(10,lightData[i].ct,lightData[i].bri);
             }
             if(i==11&&lightStatus[11]==1){
                 //西厨
-                hue->groupBri(11,lightData[i].bri);
-                hue->lightsCt(id[i],lightData[i].ct);
-                hue->groupCt(11,lightData[i].ct);//light 21,22,23,24
+                hue->lightsCt(38,lightData[i].ct);
+                hue->groupCt(11,lightData[i].ct,lightData[i].bri);//light 21,22,23,24
             }
             if(lightStatus[i]==1){
-                hue->lightsBri(id[i],lightData[i].bri);
-                hue->lightsCt(id[i],lightData[i].ct);
+                hue->lightsCt(id[i],lightData[i].ct,lightData[i].bri);
             }
         }
 
-    }
-
-}
-
-void Scene::curtainAndDoor()
-{
-    int hour=QDateTime::currentDateTime().toString("hh").toInt();
-
-    QByteArray recData;
-    while (curtainSocket->hasPendingDatagrams()) {
-        recData.resize(curtainSocket->pendingDatagramSize());
-        curtainSocket->readDatagram(recData.data(),recData.size());
-    }
-    curtainStatus=curtain1->checkStatus(2);
-    if(recData[0]==0&&curtainStatus==1){//门打开且窗帘关闭
-        curtain1->openHalf(2,2);//窗帘和纱帘都开一半
-        curtainTimer->start(120000);//两分钟后关闭
-    }
-}
-
-void Scene::curtainTimeOut()
-{
-    curtainTimer->stop();
-    if(curtainStatus==1){//关闭大厅窗帘
-        curtain1->close(2,1);
-        curtain1->close(2,2);
     }
 
 }
 
 void Scene::setStatus(const int &i)
 {
+
     int hour=QDateTime::currentDateTime().toString("hh").toInt();
     //first floor WC
-    if((hour>=22||hour<=7)&&recData[12]==1){//first floor
-        lightData[1].bri=170;
-    }else if(hour>7&&hour<22&&recData[12]==1){
-        lightData[1].bri=250;
-    }else if(recData[12]==0){
-        lightData[1].bri=briNow;
-    }
-    //second WC in second floor
-    if((hour>=22||hour<=7)&&recData[13]==1){//sconed floor wc
-        lightData[4].bri=170;
-    }else if(hour>7&&hour<22&&recData[13]==1){
-        lightData[4].bri=250;
-    }else if(recData[13]==0){
-        lightData[4].bri=briNow;
-    }
-    //main WC in second floor
-    if((hour>=22||hour<=7)&&recData[14]==1){//sconed floor main wc
-        lightData[6].bri=170;
-    }else if(hour>7&&hour<22&&recData[13]==1){
-        lightData[6].bri=250;
-    }else if(recData[13]==0){
-        lightData[6].bri=briNow;
-    }
 
-    if(i==1&&lightPerStatus[1]!=lightStatus[1]){
-        //一楼卫生间
-        if(hour>=7&&hour<23){
-            hue->groupControl(12,lightStatus[i],lightData[i].color,lightData[i].bri);
-        }else {
-            hue->groupControl(12,lightStatus[i],lightData[i].color,lightData[i].bri);
-            hue->groupCt(12,lightData[i].ct);
-        }
-
-    }else if (i==4&&lightPerStatus[4]!=lightStatus[4]) {
-        //二楼次卫生间
-
-        if(hour>=7&&hour<23){
-            hue->groupControl(14,lightStatus[i],lightData[i].color,lightData[i].bri);
-        }else {
-            hue->groupControl(14,lightStatus[i],lightData[i].color,lightData[i].bri);
-            hue->groupCt(14,lightData[i].ct);
-        }
-
-
-    }else if(i==6&&lightPerStatus[6]!=lightStatus[6]){
-        //二楼主卫生间
-        if(hour>=7&&hour<23){
-            hue->groupControl(13,lightStatus[i],lightData[i].color,lightData[i].bri);
+    if(i==1&&(lightPerStatus[1]!=lightStatus[1]||doorPreStatus[0]!=int(recData[12]))){
+        if((hour<=7||hour>=22)&&int(recData[12])==0){//first floor
+            lightData[1].bri=160;
+            qDebug()<<"bri=160";
+        }else if((hour>7&&hour<22)&&int(recData[12])==0){
+            lightData[1].bri=240;
         }else{
-            hue->groupControl(13,lightStatus[i],lightData[i].color,lightData[i].bri);
-            hue->groupCt(13,lightData[i].ct);
+            lightData[1].bri=briNow;
         }
+        hue->groupControl(12,lightStatus[i],lightData[i].ct,lightData[i].bri);
+
+    }else if (i==4&&(lightPerStatus[4]!=lightStatus[4]||doorPreStatus[1]!=int(recData[13]))) {
+        //二楼次卫生间
+        //second WC in second floor
+        qDebug()<<"recSecond="<<int (recData[13]);
+        if((hour<=7||hour>=22)&&int(recData[13])==0){//sconed floor wc
+            lightData[4].bri=170;
+            qDebug()<<"bri4=160";
+        }else if((hour>7&&hour<22)&&int(recData[13])==0){
+            lightData[4].bri=240;
+        }else{
+            lightData[4].bri=briNow;
+            qDebug()<<"briNow4="<<lightData[4].bri;
+        }
+        hue->groupControl(14,lightStatus[i],lightData[i].ct,lightData[i].bri);
+
+    }else if(i==6&&(lightPerStatus[6]!=lightStatus[6]||doorPreStatus[2]!=int(recData[14]))){
+        //main WC in second floor
+        if((hour<=7||hour>=22)&&int(recData[14])==0){//sconed floor main wc
+            lightData[6].bri=160;
+            qDebug()<<"bri6=160";
+        }else if((hour>7&&hour<22)&&int(recData[14])==0){
+            lightData[6].bri=240;
+        }else{
+            lightData[6].bri=briNow;
+            qDebug()<<"briNow6="<<lightData[6].bri;
+        }
+        //二楼主卫生间
+         hue->groupControl(13,lightStatus[i],lightData[i].ct,lightData[i].bri);
 
     }else if(i==8&&lightPerStatus[8]!=lightStatus[8]){
         //圆灯
-        if(hour>=7&&hour<23){
-            hue->groupControl(10,lightStatus[i],lightData[i].color,lightData[i].bri);
-        }else{
-            hue->groupControl(10,lightStatus[i],lightData[i].color,lightData[i].bri);
-            hue->groupCt(13,lightData[i].ct);
-        }
+        hue->groupControl(10,lightStatus[i],lightData[i].ct,lightData[i].bri);
+
     }else if(i==11&&lightPerStatus[11]!=lightStatus[11]){
         //西厨
-        if(hour>=7&&hour<23){
-            hue->lightsStatus(id[i],lightStatus[i]);
-            hue->lightsStatus(21,lightStatus[i]);
-            hue->lightsStatus(22,lightStatus[i]);
-            hue->lightsStatus(23,lightStatus[i]);
-            hue->lightsStatus(38,lightStatus[i]);
-        }else{
-            //西厨
-            hue->lightsStatus(id[i],lightStatus[i]);
-            hue->lightsStatus(21,lightStatus[i]);
-            hue->lightsStatus(22,lightStatus[i]);
-            hue->lightsStatus(23,lightStatus[i]);
-            hue->lightsStatus(38,lightStatus[i]);
-            hue->lightsCt(id[i],lightData[i].ct);
-            hue->groupCt(11,lightData[i].ct);//light 21,22,23,24
-        }
+//        qDebug()<<"light west"<<lightStatus[i];
+        hue->lightsCt(38,lightStatus[i],lightData[i].ct,lightData[i].bri);
+        hue->groupControl(11,lightStatus[i],lightData[i].ct,lightData[i].bri);
 
     }else{
         if(lightPerStatus[i]!=lightStatus[i]){
-            if(hour>=7&&hour<23){
-                hue->lightsStatus(id[i],lightStatus[i]);
-                hue->lightsBri(id[i],lightData[i].bri);
-                hue->lightsColor(id[i],lightData[i].color) ;
-            }else{
-                hue->lightsStatus(id[i],lightStatus[i]);
-                hue->lightsCt(id[i],lightData[i].ct);
-            }
-
+            //灯
+            hue->lightsStatus(id[i],lightStatus[i]);
+            hue->lightsBri(id[i],lightData[i].bri);
+//            hue->lightsCt(id[i],lightStatus[i],lightData[i].ct,lightData[i].bri);
         }
     }
 }
@@ -441,8 +366,8 @@ CheckThread::CheckThread(QObject *parent)
 
 void CheckThread::run()
 {
+
     int hour,perHour,min,perMin;
-    perMin=0;
     int briChangeTime[8]={80,60,50,50,50,50,50,250};
     int ct[8]={500,460,420,380,340,300,260,220};
 //    float colorHour[20]={0.640075,0.329971,//红色
@@ -481,6 +406,7 @@ void CheckThread::run()
                                 lightData[k].ct=ct[i]-10*j;
                                 lightData[k].bri=briChangeTime[i];
                                 briNow=briChangeTime[i];
+
                             }
                         }
                     }
@@ -526,7 +452,11 @@ void CheckThread::run()
                 flagOpen2=0;
             }
 
-        }
+        }//end mode
+
     }
 
 }
+
+
+

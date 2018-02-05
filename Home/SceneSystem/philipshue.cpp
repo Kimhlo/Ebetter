@@ -91,6 +91,31 @@ void PhilipsHue::lightsCt(const int &number, const int &ct)
     jsonData=doc.toJson();
     sendOrder(url,"put",jsonData);
 }
+
+void PhilipsHue::lightsCt(const int &number, const int &ct, const int &bri)
+{
+    QUrl url(createUrl("lights",number,"state"));
+    QJsonObject objecet;
+    QJsonDocument doc;
+    objecet.insert("ct",ct);
+    objecet.insert("bri",bri);
+    doc.setObject(objecet);
+    jsonData=doc.toJson();
+    sendOrder(url,"put",jsonData);
+}
+
+void PhilipsHue::lightsCt(const int &number, const bool &status, const int &ct, const int &bri)
+{
+    QUrl url(createUrl("lights",number,"state"));
+    QJsonObject objecet;
+    QJsonDocument doc;
+    objecet.insert("on",status);
+    objecet.insert("ct",ct);
+    objecet.insert("bri",bri);
+    doc.setObject(objecet);
+    jsonData=doc.toJson();
+    sendOrder(url,"put",jsonData);
+}
 /*****************************************************************/
 
 /*********************************************
@@ -152,6 +177,23 @@ void PhilipsHue::groupControl(const int &id, const bool &status, const float *co
 
 }
 
+void PhilipsHue::groupControl(const int &id, const bool &status, const int &ct, const int &bri)
+{
+
+    QJsonObject objecet;
+    QJsonDocument doc;
+    //set the request
+    request.setUrl(createUrl("groups",id,"action"));
+    //create the Json data
+    objecet.insert("on",status);
+    objecet.insert("ct",ct);
+    objecet.insert("bri",bri);
+    doc.setObject(objecet);
+    jsonData=doc.toJson();
+    //send the Json data
+    reply=manager->put(request,jsonData);
+}
+
 void PhilipsHue::groupDraw(const int &id, const bool &draw)
 {
     QJsonObject objecet,objecet1;
@@ -207,6 +249,19 @@ void PhilipsHue::groupCt(const int &id, const int &ct)
     QByteArray jsonData;
     request.setUrl(createUrl("groups",id,"action"));
     objecet.insert("ct",ct);
+    doc.setObject(objecet);
+    jsonData=doc.toJson();
+    reply=manager->put(request,jsonData);
+}
+
+void PhilipsHue::groupCt(const int &id, const int &ct, const int &bri)
+{
+    QJsonObject objecet;
+    QJsonDocument doc;
+    QByteArray jsonData;
+    request.setUrl(createUrl("groups",id,"action"));
+    objecet.insert("ct",ct);
+    objecet.insert("bri",bri);
     doc.setObject(objecet);
     jsonData=doc.toJson();
     reply=manager->put(request,jsonData);

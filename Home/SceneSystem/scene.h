@@ -11,6 +11,9 @@
 #include <QByteArray>
 #include <QThread>
 #include <QDateTime>
+#include <QTime>
+#include <QEventLoop>
+#include <QCoreApplication>
 
 /*****************************************
  * 全局变量的定义，包括hue灯的结构体和底层灯光控制
@@ -28,7 +31,7 @@ extern hueData lightData[12];
 extern QByteArray recData;
 extern int mode;
 extern int briNow;
-extern int doorStates[8];
+extern int doorStates;
 /*****************************************
  * 时间检查线程的定义
 ******************************************/
@@ -53,8 +56,10 @@ signals:
     void hueCtHasChaged();
     void onAlarm();
     void onCurtainChanged(int id,int i);
+    void isTimerStop();
 
 };
+
 
 /*****************************************
  * 场景类的定义
@@ -71,10 +76,12 @@ public:
     void setAllCurtainOpenTime(const int&time);
     void stopAlarm();
     void openAllCurtain();
+
 private:
     //light status
     int lightStatus[12];
     int lightPerStatus[12];
+    int doorPreStatus[3];
     PhilipsHue *hue;
     //network
     QUdpSocket *udpSocket;
@@ -96,6 +103,7 @@ private:
     int curtainStatus;
     //the music
     DM836II *radio1;
+
 signals:
 
 public slots:
@@ -104,9 +112,10 @@ public slots:
     void openAlarm();
     void operateCurtain(int id,int i);
     void updateCt();
-    void curtainAndDoor();
-    void curtainTimeOut();
+
 };
+
+
 
 #endif // SCENE_H
 
