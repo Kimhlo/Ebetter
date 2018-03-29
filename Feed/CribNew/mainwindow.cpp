@@ -36,10 +36,6 @@ MainWindow::MainWindow(QWidget *parent) :
     MyNamespace::musicProcess.write( "loadfile LiBai.mp3\n");
     readIni();
 
-    //音乐播放器创建
-    player=new QMediaPlayer;
-    playList=new QMediaPlaylist;
-
     //built the udp
     udpSocket = new QUdpSocket(this);
 

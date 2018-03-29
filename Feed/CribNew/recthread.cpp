@@ -301,9 +301,6 @@ void RecThread::run()
             eatFinish=0;
             qDebug()<<"人家还没吃完";
           }//end if inLevel
-
-
-
     }
 }
 

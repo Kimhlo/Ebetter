@@ -207,30 +207,41 @@ void CurtainNew::stopOpenHalf1()
 {
     setStatus(1,6);
     setStatus(1,3);
-    timer1->stop();
+    if(timer1->isActive()){
+        timer1->stop();
+    }
+
 }
 void CurtainNew::stopOpenHalf2()
 {
     setStatus(2,6);
     setStatus(2,3);
-    timer2->stop();
+    if(timer2->isActive()){
+        timer2->stop();
+    }
 }
 void CurtainNew::stopOpenHalf3()
 {
     setStatus(3,6);
     setStatus(3,3);
-    timer3->stop();
+    if(timer3->isActive()){
+        timer3->stop();
+    }
 }
 void CurtainNew::stopOpenHalf4()
 {
     setStatus(4,6);
     setStatus(4,3);
-    timer4->stop();
+    if(timer4->isActive()){
+        timer4->stop();
+    }
 }
 void CurtainNew::stopOpenHalf5()
 {
     setStatus(5,6);
     setStatus(5,3);
-    timer5->stop();
+    if(timer5->isActive()){
+        timer5->stop();
+    }
 }
 

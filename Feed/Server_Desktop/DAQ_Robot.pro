@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 QT       += core gui
-
+QT       += multimedia
 QT += sql
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
@@ -32,4 +32,10 @@ HEADERS  += mainwindow.h
 FORMS    += mainwindow.ui
 QT += network
 QT += core
+
+DISTFILES += \
+    Images/logo.png
+
+RESOURCES += \
+    Images/images.qrc
 

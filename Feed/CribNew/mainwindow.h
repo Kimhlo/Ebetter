@@ -12,8 +12,7 @@
 #include <QProcess>
 #include <QSettings>
 #include "recthread.h"
-#include <QMediaPlayer>
-#include <QMediaPlaylist>
+
 
 namespace Ui {
 class MainWindow;
